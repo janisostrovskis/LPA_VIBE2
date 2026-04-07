@@ -1,0 +1,69 @@
+# ==========================================
+# LPA Platform - Two-service monorepo
+# ==========================================
+
+# ---------- Environment & Secrets ----------
+.env
+.env.*
+!.env.example
+
+# ---------- Python / Backend ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+*.whl
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# ---------- Node / Frontend ----------
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+
+# ---------- Claude Code (local) ----------
+.claude/settings.local.json
+
+# ---------- IDE ----------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------- Docker ----------
+docker-compose.override.yml
+
+# ---------- Database ----------
+*.sql.bak
+pgdata/
+
+# ---------- Testing ----------
+playwright-report/
+test-results/
+blob-report/
+
+# ---------- OS ----------
+*.log
+*.tmp
+*.bak
