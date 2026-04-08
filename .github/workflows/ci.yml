@@ -1,6 +1,8 @@
 name: CI
 
-on:
+# `on` must be quoted — YAML 1.1 parses bare `on:` as boolean True, which
+# GitHub Actions then fails to recognize as a trigger config.
+"on":
   push:
     branches:
       - master
