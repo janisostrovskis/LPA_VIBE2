@@ -22,6 +22,50 @@ by `scripts/check_handoff_log.py`):
 
 ---
 
+## 00e — backend-agent — 2026-04-08
+
+- **Task:** Create backend/app/lib primitives — Result[T, E] sum type, DomainError taxonomy, stdlib JSON logger, with unit tests
+- **Scope (files changed):**
+  - backend/app/__init__.py
+  - backend/app/lib/__init__.py
+  - backend/app/lib/result.py
+  - backend/app/lib/errors.py
+  - backend/app/lib/logger.py
+  - backend/tests/__init__.py
+  - backend/tests/lib/__init__.py
+  - backend/tests/lib/test_result.py
+  - backend/tests/lib/test_errors.py
+  - backend/tests/lib/test_logger.py
+- **Skills invoked:**
+  - `simplify` — PASS (reviewed all source files; no dead branches, extracted `_RESERVED_LOG_ATTRS` to module-level frozen set, added `_reset_for_testing` to avoid private-state poking from tests, noqa-annotated the intentional `global` guard)
+- **Rule 3 verification:**
+  - `cd backend && ruff check app/lib tests/lib` → exit 0
+  - `cd backend && mypy app/lib` → exit 0 (strict, disallow_any_explicit)
+  - `cd backend && python -m pytest tests/lib -v` → 32 passed, exit 0
+  - `cd backend && python -c "from app.lib import Result, Ok, Err, DomainError, NotFoundError, ValidationError, ConflictError, UnauthorizedError, ForbiddenError, get_logger; print('ok')"` → prints ok, exit 0
+  - `python scripts/check_cola_imports.py` → exit 0
+  - `python scripts/check_file_size.py` → exit 0 (largest file: test_logger.py at 89 lines)
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** Corrects 00a retrofit — `backend/app/__init__.py` and `backend/tests/__init__.py` did not actually exist on disk before this handoff (confirmed via `git ls-files backend/` at 00e planning time). Both created fresh here. HANDOFF_LOG write itself was done from main session because `planning/**` is main-session scope per scope.yaml (same carve-out gap as the devops-agent 00e entry — tracked as Finding F1).
+
+## 00e — devops-agent — 2026-04-08
+
+- **Task:** Extend scope.yaml to give backend-agent ownership of backend/app/lib/** and backend package markers
+- **Scope (files changed):**
+  - .claude/scope.yaml
+- **Skills invoked:**
+  - `update-config` — PASS (invoked before editing `.claude/scope.yaml`, which is machine-readable hook-consumed config)
+- **Rule 3 verification:**
+  - `python -c "import yaml; yaml.safe_load(open('.claude/scope.yaml'))"` → exit 0
+  - `python scripts/hooks/pretool_scope_guard.py --selftest` → exit 0
+  - Synthetic dry-run: backend-agent → `backend/app/lib/result.py` → exit 0
+  - Synthetic dry-run: frontend-agent → `backend/app/lib/result.py` → exit 2
+  - Synthetic dry-run: backend-agent → `backend/app/infrastructure/config/env.py` → exit 2
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** Preparatory handoff for 00e. Backend-agent Handoff 2 follows, creating the actual lib files. HANDOFF_LOG write itself was blocked by the scope guard from inside devops-agent (planning/** is main-session scope) — this entry was appended from main session. A future manifest amendment should carve out `planning/**/HANDOFF_LOG.md` as writable by every agent that ships work, otherwise every handoff requires a main-session post-write. Filing as Finding F1 for cycle-3 efficiency-agent review.
+
+---
+
 ## 00a — devops-agent — 2026-04-07
 
 - **Task:** Backend toolchain scaffold (pyproject.toml, ruff, mypy, pytest layout)

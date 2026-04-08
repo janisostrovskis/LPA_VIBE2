@@ -32,13 +32,17 @@ agents:
 
   backend-agent:
     allow:
+      - "backend/app/__init__.py"
       - "backend/app/application/**"
       - "backend/app/domain/rules/**"
       - "backend/app/domain/events/**"
       - "backend/app/domain/errors/**"
       - "backend/app/api/**"
+      - "backend/app/lib/**"
+      - "backend/tests/__init__.py"
       - "backend/tests/application/**"
       - "backend/tests/api/**"
+      - "backend/tests/lib/**"
 
   database-agent:
     allow:

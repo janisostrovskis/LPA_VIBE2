@@ -31,8 +31,8 @@ Sub-phase 00a delivers the following six files. The remaining nine items from `p
 | **00a** | Backend toolchain (`pyproject.toml`) + CI (`ci.yml`) + 3 enforcement scripts | Complete |
 | **00b** | `docker-compose.yml` + `backend/Dockerfile` + `.dockerignore`s + `.env.example` + first push (frontend Dockerfile deferred to 00c) | Complete |
 | **00c** | `frontend/package.json`, `tsconfig.json`, `tailwind.config.ts`, `next.config.ts`, `postcss.config.mjs`, `eslint.config.mjs`, `vitest.config.ts`, `playwright.config.ts`, minimal `src/app/[locale]` hello page + smoke tests, `frontend/Dockerfile`, docker-compose frontend service | Complete |
-| **00d** | Runtime enforcement: `.claude/scope.yaml` manifest, PreToolUse scope guard, HANDOFF_LOG validator, commit-msg Simplify gate, local `.pre-commit-config.yaml`, `handoff-hygiene` CI job | **In progress** |
-| 00e | `backend/app/lib/result.py`, `backend/app/lib/errors.py`, `backend/app/lib/logger.py` | Not started |
+| **00d** | Runtime enforcement: `.claude/scope.yaml` manifest, PreToolUse scope guard, HANDOFF_LOG validator, commit-msg Simplify gate, local `.pre-commit-config.yaml`, `handoff-hygiene` CI job | Complete |
+| **00e** | `backend/app/__init__.py`, `backend/app/lib/{result,errors,logger}.py` + tests (bootstraps `backend/app/` package tree) | **In progress** |
 | 00f | `backend/app/infrastructure/config/env.py` (Pydantic Settings, fail-loudly validation) | Not started |
 | 00g | Full empty folder tree with `__init__.py` files matching the COLA layer layout | Not started |
 
