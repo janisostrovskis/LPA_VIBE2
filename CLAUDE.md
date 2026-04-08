@@ -126,6 +126,10 @@ Full process details are in `docs/DEVELOPMENT_RULEBOOK.MD`. These are the non-ne
 4. Invoke the **Efficiency Agent** to retrospect on the phase. Apply any process amendments it produces.
 5. **All four must pass before starting the next phase.** No exceptions.
 
+### Known limitation — new subagent registration
+
+Claude Code discovers `.claude/agents/*.md` at **session start**. A new agent file created mid-session is not picked up until the session restarts. If you just created a new agent and `subagent_type` does not list it, invoke it via `general-purpose` for the rest of the current session and it will be directly invokable next session. This is not a bug in the agent file — no amendment to the frontmatter will fix it.
+
 ### When to invoke the Efficiency Agent (mid-cycle)
 
 Outside of phase boundaries, invoke Efficiency Agent when any of these occur:
