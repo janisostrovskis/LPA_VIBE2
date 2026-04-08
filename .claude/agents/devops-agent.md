@@ -78,6 +78,19 @@ Before adding ANY dependency or writing ANY build/config identifier, run this ch
 2. If the package isn't installed, fetch the upstream documentation or fail loudly and ask the main session.
 3. **Never** invent a string that looks plausible. **Why:** Phase 00a shipped `build-backend = "setuptools.backends.legacy:build"` — a hallucinated string that does not exist anywhere in setuptools. Caught only because verification ran `pip install`. Future configs may not have such an obvious failure signal.
 
+**Rule 3 — Verify every config string by executing the code path that consumes it.** Reading docs is not sufficient — Rule 2 was in place for Phase 00b and still failed to prevent a hallucinated `postgresql+psycopg://` URL in `docker-compose.yml` and `.env.example`, because the agent never actually fed the string to the consumer. Before declaring a deliverable HANDOFF COMPLETE, every config string you wrote MUST be exercised by the real consumer at least once. Concrete checks (non-exhaustive — extend as new config types appear):
+
+| Config artifact | Mandatory verification command (must exit 0) |
+|---|---|
+| `pyproject.toml` build-system / dependencies | `pip install -e .[dev]` in a clean venv |
+| Database URL in `.env.example` / `docker-compose.yml` env | `python -c "import psycopg, os; psycopg.connect(os.environ['DATABASE_URL']).close()"` against a running db, OR for SQLAlchemy-scheme URLs `python -c "from sqlalchemy import create_engine; create_engine(url).connect().close()"` — pick the one matching the actual consumer |
+| Docker image tag in any `Dockerfile` or compose `image:` | `docker pull <tag>` succeeds |
+| GitHub Actions `uses:` action ref | resolves on `https://github.com/{owner}/{repo}/tree/{ref}` (or job dry-run) |
+| Alembic / framework config keys | start the framework with the config and confirm no `KeyError`/`UnknownOption` |
+| Entry-point / module path strings | `python -c "import importlib; importlib.import_module('the.string')"` |
+
+If you cannot run the verification (no network, no daemon, missing service), you MUST mark the deliverable PENDING-VERIFICATION in the handoff and explicitly flag which strings were not exercised. You MUST NOT report HANDOFF COMPLETE on an unverified config string. **Why:** Phase 00b shipped `DATABASE_URL=postgresql+psycopg://lpa:lpa@db:5432/lpa` in both `docker-compose.yml` and `.env.example`. `+psycopg` is a SQLAlchemy URL convention; raw `psycopg.connect()`, libpq, and the MCP postgres server cannot parse it (`ProgrammingError: missing "=" after ...`). Rule 2 ("don't invent strings") did not catch it because the agent treated the string as well-known. Only execution against the real consumer would have caught it — and a 1-line `psycopg.connect` would have. The verification command MUST be executed by the agent, not deferred to the main session's verification pass.
+
 ### CI/CD Pipeline
 
 Pipeline stages (in order):
