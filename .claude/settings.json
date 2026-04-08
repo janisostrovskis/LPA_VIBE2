@@ -31,9 +31,23 @@
     ],
     "deny": [
       "Read(.env)",
-      "Read(.env.*)",
+      "Read(.env.local)",
+      "Read(.env.development)",
+      "Read(.env.development.local)",
+      "Read(.env.production)",
+      "Read(.env.production.local)",
+      "Read(.env.test)",
+      "Read(.env.test.local)",
+      "Read(.env.staging)",
       "Read(**/.env)",
-      "Read(**/.env.*)",
+      "Read(**/.env.local)",
+      "Read(**/.env.development)",
+      "Read(**/.env.development.local)",
+      "Read(**/.env.production)",
+      "Read(**/.env.production.local)",
+      "Read(**/.env.test)",
+      "Read(**/.env.test.local)",
+      "Read(**/.env.staging)",
       "Bash(rm -rf *)",
       "Bash(*DROP TABLE*)",
       "Bash(*DROP DATABASE*)",
@@ -52,7 +66,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'FILE=$(cat | python3 -c \"import sys,json; print(json.load(sys.stdin).get(\\\"file_path\\\",\\\"\\\"))\" 2>/dev/null); if echo \"$FILE\" | grep -qE \"\\.env$|\\.env\\.\"; then echo \"BLOCKED: Cannot write to .env files\" >&2; exit 2; fi; exit 0'"
+            "command": "bash -c 'FILE=$(cat | python3 -c \"import sys,json; print(json.load(sys.stdin).get(\\\"file_path\\\",\\\"\\\"))\" 2>/dev/null); if echo \"$FILE\" | grep -qE \"(^|/)\\.env(\\.(local|development|production|test|staging)(\\.local)?)?$\"; then echo \"BLOCKED: Cannot write to real .env files. Use .env.example/.env.sample/.env.template for documentation.\" >&2; exit 2; fi; exit 0'"
           }
         ]
       }

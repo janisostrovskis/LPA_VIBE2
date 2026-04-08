@@ -3,8 +3,12 @@ name: CI
 on:
   push:
     branches:
+      - master
       - main
-  pull_request: {}
+  pull_request:
+    branches:
+      - master
+      - main
 
 jobs:
   lint:
@@ -136,7 +140,7 @@ jobs:
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && hashFiles('frontend/playwright.config.ts') != ''
+    if: (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') && hashFiles('frontend/playwright.config.ts') != ''
     steps:
       - uses: actions/checkout@v4
 
