@@ -36,8 +36,30 @@ services:
       - ./backend:/app
     restart: "no"
 
-  # frontend:
-  #   TODO 00c: add Next.js service once frontend/package.json exists.
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: lpa-frontend
+    environment:
+      NEXT_TELEMETRY_DISABLED: "1"
+      # NEXT_PUBLIC_API_URL is consumed at build time by Next.js; for dev
+      # the bind mount + npm run dev re-reads .env on every rebuild.
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      # Anonymous volumes shadow the bind mount so the container's own
+      # node_modules/ (installed during `npm ci` in the Dockerfile) and
+      # .next/ build output are not clobbered by the host's empty/stale
+      # versions. Without these, `next dev` fails with missing-module errors.
+      - /app/node_modules
+      - /app/.next
+    restart: "no"
 
 volumes:
   lpa-db-data:

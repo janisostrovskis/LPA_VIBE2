@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --lpa-ink: #1a1a1a;
+  --lpa-canvas: #ffffff;
+  --lpa-canvas-soft: #f8f8f8;
+  --lpa-text-secondary: #4a4a4a;
+  --lpa-text-tertiary: #8a8a8a;
+  --lpa-border-light: #e2e2e2;
+  --lpa-divider-subtle: #efefef;
+  --lpa-accent-sage: #9caf88;
+  --lpa-accent-mint: #e8f4f0;
+  --lpa-accent-beige: #e8dcc4;
+  --lpa-accent-taupe: #c9b8a8;
+}
