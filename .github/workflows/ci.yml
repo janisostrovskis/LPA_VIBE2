@@ -201,9 +201,14 @@ jobs:
           backend/
 
       - name: pip-audit
-        # --skip-editable: the lpa-backend package is installed in editable
-        # mode and does not exist on PyPI; without this flag, --strict fails.
-        run: cd backend && pip-audit --strict --skip-editable
+        # --skip-editable: the lpa-backend package is installed editable and
+        #   does not exist on PyPI; pip-audit cannot resolve it.
+        # No --strict: --strict treats unauditable packages as errors AND
+        #   conflicts with --skip-editable (the editable skip itself counts
+        #   as an unaudited package). Without --strict, pip-audit still
+        #   exits non-zero on any real vulnerability finding, which is what
+        #   we actually want.
+        run: cd backend && pip-audit --skip-editable
 
       - name: Download gitleaks
         run: |
