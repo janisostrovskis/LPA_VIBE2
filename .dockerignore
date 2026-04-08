@@ -1,0 +1,17 @@
+.git/
+.github/
+.claude/
+.venv-bootstrap-check/
+node_modules/
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+.env
+.env.*
+!.env.example
+planning/
+docs/
+*.md
+!README.md

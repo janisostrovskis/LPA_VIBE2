@@ -1,0 +1,44 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: lpa-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-lpa}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lpa}
+      POSTGRES_DB: ${POSTGRES_DB:-lpa}
+    ports:
+      - "5432:5432"
+    volumes:
+      - lpa-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lpa} -d ${POSTGRES_DB:-lpa}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: "no"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: lpa-backend
+    environment:
+      # Libpq-compatible scheme (NOT the SQLAlchemy `postgresql+psycopg://` form,
+      # which raw psycopg/libpq does not parse). The backend env loader in 00e
+      # will derive the SQLAlchemy engine URL from this value.
+      DATABASE_URL: ${DATABASE_URL:-postgresql://lpa:lpa@db:5432/lpa}  # pragma: allowlist secret
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    restart: "no"
+
+  # frontend:
+  #   TODO 00c: add Next.js service once frontend/package.json exists.
+
+volumes:
+  lpa-db-data:
+    name: lpa-db-data

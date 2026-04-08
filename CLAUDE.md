@@ -43,6 +43,7 @@ Full functional spec is in `docs/LPA_BUSINESS_CASE.MD`. Core modules:
 - GDPR-compliant: data minimization, export/deletion support, consent tracking
 - Payment provider not yet selected — architecture should be provider-agnostic
 - External integrations limited to: payments, email, analytics
+- **Dual-platform development.** The user develops on **both Windows (Git Bash) and macOS**. Every command, dependency, script, and config any agent writes MUST work on both. Use `pathlib`, forward slashes, POSIX-shell syntax, no PowerShell, no `cmd`, no platform-only binaries without a PEP 508 marker or equivalent gate. Why: Phase 00a shipped a `semgrep` dev dep that broke Windows install — see `planning/phase-00-foundation/RETROSPECTIVE.md` Finding 2.
 
 ## Tech Stack
 
@@ -108,6 +109,7 @@ Full process details are in `docs/DEVELOPMENT_RULEBOOK.MD`. These are the non-ne
 | Security Agent | Read-only audit of everything. Owns `backend/app/api/middleware/`, `backend/app/infrastructure/config/`, `.gitignore`, `scripts/` | Files issues for other agents to fix |
 | i18n Agent | `frontend/public/locales/`, translation-related components | Domain, application, infrastructure |
 | DevOps Agent | Root configs, `scripts/`, CI/CD, Docker files | Application code |
+| Efficiency Agent | `.claude/agents/*.md`, `CLAUDE.md`, `docs/DEVELOPMENT_RULEBOOK.MD`, `planning/**/RETROSPECTIVE.md` (process docs only) | All code, tests, infrastructure, `.claude/settings.json` |
 
 ### While writing code
 
@@ -121,7 +123,20 @@ Full process details are in `docs/DEVELOPMENT_RULEBOOK.MD`. These are the non-ne
 1. Run `/simplify` on all changed files. Fix all findings. Repeat until clean.
 2. Complete the security review checklist in `planning/phase-NN/SECURITY_REVIEW.md`.
 3. Complete the testing gate in `planning/phase-NN/TESTING_GATE.md`.
-4. **All three must pass before starting the next phase.** No exceptions.
+4. Invoke the **Efficiency Agent** to retrospect on the phase. Apply any process amendments it produces.
+5. **All four must pass before starting the next phase.** No exceptions.
+
+### When to invoke the Efficiency Agent (mid-cycle)
+
+Outside of phase boundaries, invoke Efficiency Agent when any of these occur:
+
+- A tool or command failed 2+ times in the same session (signal: workflow gap, not transient error)
+- An agent did work that should have been handed off to another agent (signal: scope confusion in agent docs)
+- The user had to correct the assistant's approach after work was already produced (signal: missing upfront rule)
+- A platform-specific command broke on Windows or macOS (signal: cross-platform regression)
+- A hallucinated file/skill/command was referenced (signal: missing verification rule)
+
+The Efficiency Agent is **not** invoked for one-off mistakes or transient failures. Its job is to detect *patterns* and amend process docs.
 
 ## Fail-Loudly Principle
 

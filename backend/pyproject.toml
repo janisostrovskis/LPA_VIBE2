@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lpa-backend"
+version = "0.0.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115,<0.117",
+    "uvicorn[standard]>=0.32,<0.34",
+    "sqlalchemy>=2.0.36,<2.1",
+    "alembic>=1.14,<1.15",
+    "pydantic>=2.10,<2.11",
+    "pydantic-settings>=2.7,<2.8",
+    "psycopg[binary]>=3.2,<3.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "httpx>=0.28",
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "bandit[toml]>=1.8",
+    # semgrep does not support Windows (https://github.com/semgrep/semgrep/issues/1330).
+    # Skipped on Windows; runs on macOS and Linux (CI). Windows devs invoke semgrep
+    # via Docker or WSL if they need to run SAST locally.
+    "semgrep>=1.95; sys_platform != 'win32'",
+    "pip-audit>=2.7",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["app"]
+
+[tool.ruff.lint]
+# S110 (try-except-pass) and BLE001 (blind-except) together proxy for the
+# "pass-only handler" rule required by CLAUDE.md line 144. A bespoke AST
+# check covering every edge case is deferred to sub-phase 00d (PLAN.md R1).
+select = ["E", "F", "W", "B", "S", "UP", "I", "BLE"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["app"]
+disallow_any_explicit = true
+warn_unreachable = true
+no_implicit_reexport = true
+
+[tool.bandit]
+targets = ["app"]
+exclude_dirs = ["tests", "alembic/versions"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

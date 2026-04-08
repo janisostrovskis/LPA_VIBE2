@@ -90,25 +90,76 @@ Severity levels:
 
 ## Automated Checks to Run
 
+You MUST run all of the following on every phase review. Each tool is **fail-loudly** — non-zero exit means findings exist and the phase gate is blocked until they are triaged. Never silently ignore a tool failure.
+
+### 1. SAST scanners (real vulnerability detection)
+
 ```bash
-# Check for hardcoded secrets
-grep -rn "sk_live\|sk_test\|password\s*=\s*['\"]" backend/ frontend/ --include="*.py" --include="*.ts" --include="*.tsx"
+# Bandit — Python security linter (CWE-mapped findings: SQL injection, hardcoded creds, weak crypto, unsafe deserialization, etc.)
+# Install: pip install bandit
+bandit -r backend/app/ -ll -f txt --exclude backend/app/__pycache__,backend/tests
 
-# Check for bare except
-grep -rn "except:" backend/ --include="*.py" | grep -v "except [A-Z]"
+# Semgrep — multi-language SAST with curated security rulesets
+# Install: pip install semgrep
+semgrep scan --config=p/security-audit --config=p/python --config=p/owasp-top-ten --config=p/jwt --config=p/sql-injection --error backend/ frontend/
 
-# Check for empty catch
-grep -rn "catch.*{" frontend/ --include="*.ts" --include="*.tsx" -A1 | grep -B1 "}"
+# Gitleaks — secret scanner (scans working tree AND full git history)
+# Install: see https://github.com/gitleaks/gitleaks (standalone binary)
+gitleaks detect --source . --no-banner --redact --exit-code 1
+gitleaks detect --source . --no-banner --redact --exit-code 1 --log-opts="--all"  # full history
+```
 
-# Check COLA imports in domain layer
+### 2. Frontend dependency audit
+
+```bash
+# npm audit — known CVEs in JS dependencies
+cd frontend && npm audit --audit-level=moderate
+```
+
+### 3. Python dependency audit
+
+```bash
+# pip-audit — known CVEs in Python dependencies (PyPA-maintained)
+# Install: pip install pip-audit
+cd backend && pip-audit --strict
+```
+
+### 4. COLA + fail-loudly grep checks (project-specific, complement SAST)
+
+```bash
+# COLA imports in domain layer (must be empty)
 grep -rn "from fastapi\|from sqlalchemy\|from pydantic" backend/app/domain/ --include="*.py"
 
-# Check for .env in git
+# Bare except (must be empty)
+grep -rn "except:" backend/ --include="*.py" | grep -v "except [A-Z]"
+
+# except Exception: pass (must be empty)
+grep -rnP "except\s+Exception\s*:\s*pass" backend/ --include="*.py"
+
+# Empty catch blocks in TypeScript (must be empty)
+grep -rnP "catch\s*\([^)]*\)\s*\{\s*\}" frontend/src/ --include="*.ts" --include="*.tsx"
+
+# print() in production code (excluding tests)
+grep -rn "print(" backend/app/ --include="*.py"
+```
+
+### 5. Git history checks
+
+```bash
+# .env files committed at any point in history (must be empty)
 git log --all --diff-filter=A --name-only -- "*.env" ".env*" 2>/dev/null
 
-# Check file sizes
-find backend/ frontend/ -name "*.py" -o -name "*.ts" -o -name "*.tsx" | xargs wc -l | sort -rn | head -20
+# File size violations
+find backend/ frontend/ -name "*.py" -o -name "*.ts" -o -name "*.tsx" | xargs wc -l 2>/dev/null | sort -rn | head -20
 ```
+
+### Triage protocol
+
+1. Run all checks above in order. Capture full output.
+2. For every finding, classify severity (CRITICAL / HIGH / MEDIUM / LOW per the rubric below) and file a `SECURITY FINDING` handoff per the format in "How to Report Findings".
+3. **A single CRITICAL or HIGH finding blocks the phase gate.** No exceptions.
+4. If a tool is not installed, that itself is a HIGH finding — file a handoff to the DevOps Agent to install it. Never skip a check because the tool is missing.
+5. False positives are documented in `planning/phase-NN/SECURITY_REVIEW.md` with a justification and reviewer sign-off, never suppressed in tool config without trace.
 
 ## Before Starting Work
 

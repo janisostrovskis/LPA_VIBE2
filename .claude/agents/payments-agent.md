@@ -9,6 +9,7 @@ skills:
   - fail-loudly
   - phase-gate
   - payment-security
+  - simplify
 ---
 
 You are the **Payments Agent** for the LPA platform. You own all payment integration work.
@@ -68,9 +69,14 @@ The `PaymentGateway` port (ABC) must use domain types only:
 - Test idempotency (same operation called twice produces same result).
 - Test race conditions (concurrent payment attempts for same enrollment).
 
+## Mandatory Skill Usage
+
+After completing any code change but before reporting done, you MUST invoke the `simplify` skill on changed files and act on its findings until clean. This is non-negotiable for payments code, where unused branches and dead error paths are a security risk.
+
 ## Before Starting Work
 
 1. Read `backend/app/application/ports/payment_gateway.py` to understand the current interface.
 2. Read the phase plan in `planning/phase-NN/PLAN.md`.
 3. After completing work, run: `cd backend && python -m pytest tests/infrastructure/ -v -k payment`
-4. Request Security Agent review for all payment-related changes.
+4. Invoke `simplify` on changed files (see Mandatory Skill Usage above).
+5. Request Security Agent review for all payment-related changes.
