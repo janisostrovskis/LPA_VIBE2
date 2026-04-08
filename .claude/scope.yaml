@@ -29,6 +29,7 @@ agents:
       - "frontend/tests/**"
       - "frontend/.eslintrc*"
       - "frontend/eslint.config.*"
+      - "planning/**/HANDOFF_LOG.md"
 
   backend-agent:
     allow:
@@ -43,6 +44,7 @@ agents:
       - "backend/tests/application/**"
       - "backend/tests/api/**"
       - "backend/tests/lib/**"
+      - "planning/**/HANDOFF_LOG.md"
 
   database-agent:
     allow:
@@ -52,12 +54,14 @@ agents:
       - "alembic/**"
       - "backend/tests/domain/**"
       - "backend/tests/infrastructure/database/**"
+      - "planning/**/HANDOFF_LOG.md"
 
   payments-agent:
     allow:
       - "backend/app/infrastructure/payments/**"
       - "backend/app/application/ports/payment_gateway.py"
       - "backend/tests/infrastructure/payments/**"
+      - "planning/**/HANDOFF_LOG.md"
 
   devops-agent:
     allow:
@@ -84,20 +88,26 @@ agents:
       - ".gitignore"
       - ".claude/scope.yaml"
       - ".claude/settings.json"
+      - "planning/**/HANDOFF_LOG.md"
 
   security-agent:
     allow:
       - "backend/app/api/middleware/**"
+      - "backend/app/infrastructure/__init__.py"
       - "backend/app/infrastructure/config/**"
       - ".gitignore"
       - "scripts/security_scan.py"
       - "planning/**/SECURITY_REVIEW.md"
+      - "planning/**/HANDOFF_LOG.md"
+      - "backend/tests/infrastructure/__init__.py"
+      - "backend/tests/infrastructure/config/**"
 
   i18n-agent:
     allow:
       - "frontend/public/locales/**"
       - "frontend/src/lib/i18n.ts"
       - "frontend/src/lib/i18n/**"
+      - "planning/**/HANDOFF_LOG.md"
 
   efficiency-agent:
     allow:

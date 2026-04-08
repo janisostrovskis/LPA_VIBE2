@@ -22,6 +22,43 @@ by `scripts/check_handoff_log.py`):
 
 ---
 
+## 00f — security-agent — 2026-04-08
+
+- **Task:** Implement backend/app/infrastructure/config/env.py — Pydantic Settings env loader with fail-loudly validation and cached singleton accessor, plus unit tests
+- **Scope (files changed):**
+  - backend/app/infrastructure/__init__.py
+  - backend/app/infrastructure/config/__init__.py
+  - backend/app/infrastructure/config/env.py
+  - backend/tests/infrastructure/__init__.py
+  - backend/tests/infrastructure/config/__init__.py
+  - backend/tests/infrastructure/config/test_env.py
+  - planning/phase-00-foundation/HANDOFF_LOG.md
+- **Skills invoked:**
+  - `simplify` — PASS (reviewed env.py and config/__init__.py; both minimal — explicit `__all__` re-export, StrEnum classes, Pydantic Field declarations only; no dead branches; the two `# type: ignore` comments are load-bearing — `[explicit-any]` on `class Settings(BaseSettings)` is required because pydantic-settings BaseSettings exposes `Any` in its public init and project mypy has `disallow_any_explicit=true`; `[call-arg]` on `Settings()` is required because mypy cannot see Pydantic's dynamic field-from-env constructor)
+- **Rule 3 verification:**
+  - `cd backend && ruff check app/infrastructure tests/infrastructure` → exit 0
+  - `cd backend && mypy app/infrastructure` → exit 0
+  - `cd backend && python -m pytest tests/infrastructure -v` → 11 passed, exit 0
+  - `cd backend && DATABASE_URL= python -c "from app.infrastructure.config import get_settings; get_settings.cache_clear(); get_settings()"` → ValidationError raised mentioning DATABASE_URL, exit 1 (expected fail-loud)
+  - `cd backend && DATABASE_URL=postgresql://x:y@db:5432/z python -c "from app.infrastructure.config import get_settings; get_settings.cache_clear(); s=get_settings(); print(s.backend_port, s.environment.value)"` → prints `8000 development`, exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** First handoff where a non-main-session agent writes its own HANDOFF_LOG entry end-to-end. Validates the F1 fix from 00f H1 (scope.yaml amendment adding planning/**/HANDOFF_LOG.md to all 7 shipping agents). Previous attempt was blocked by plan mode leaking into the subagent session. Used `enum.StrEnum` (Python 3.12+) per ruff UP042 rather than the legacy `(str, Enum)` pattern shown in the handoff brief — equivalent semantics, idiomatic for the project's stated 3.12+ baseline.
+
+## 00f — security-agent — 2026-04-08
+
+- **Task:** Allowlist test-fixture DB URLs in test_env.py after security_scan.py pre-commit hit blocked 00f commit.
+- **Scope (files changed):**
+  - backend/tests/infrastructure/config/test_env.py
+  - planning/phase-00-foundation/HANDOFF_LOG.md
+- **Skills invoked:**
+  - `simplify` — PASS (trivial — extracted three test-URL literals to module-level constants with pragma markers; no logic change, no dead branches)
+- **Rule 3 verification:**
+  - `cd backend && ruff check tests/infrastructure/config/test_env.py` → exit 0
+  - `cd backend && python -m pytest tests/infrastructure -v` → 11 passed, exit 0
+  - `cd . && python scripts/security_scan.py` → exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** Caught by pre-commit `security-scan` hook (Hardcoded DB URL regex matched 15 lines) rather than by the original 00f H1 Rule 3 verification sequence — which did not include `python scripts/security_scan.py`. Gap worth noting for retrospective: every sub-phase that adds Python source should run the security scanner before claiming PASS. Not blocking — fix was mechanical and isolated to the test file. Scanner supports `# pragma: allowlist secret` per-line marker (see `scripts/security_scan.py` ALLOWLIST_MARKER); used by extracting the three literals to `_URL`, `_URL_A`, `_URL_B` module constants each annotated once.
+
 ## 00e — backend-agent — 2026-04-08
 
 - **Task:** Create backend/app/lib primitives — Result[T, E] sum type, DomainError taxonomy, stdlib JSON logger, with unit tests
