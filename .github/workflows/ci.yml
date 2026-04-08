@@ -201,7 +201,9 @@ jobs:
           backend/
 
       - name: pip-audit
-        run: cd backend && pip-audit --strict
+        # --skip-editable: the lpa-backend package is installed in editable
+        # mode and does not exist on PyPI; without this flag, --strict fails.
+        run: cd backend && pip-audit --strict --skip-editable
 
       - name: Download gitleaks
         run: |
