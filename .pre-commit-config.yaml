@@ -1,0 +1,53 @@
+# .pre-commit-config.yaml — Local pre-commit hook configuration for LPA.
+#
+# Install:
+#   pip install pre-commit
+#   pre-commit install
+#   pre-commit install --hook-type commit-msg
+#
+# Run manually against all files:
+#   pre-commit run --all-files
+#
+# Cross-platform note: hooks use `language: python` so pre-commit manages
+# the Python environment automatically on both Windows (Git Bash / py launcher)
+# and macOS/Linux.
+
+default_stages: [pre-commit]
+
+repos:
+  - repo: local
+    hooks:
+      - id: check-cola-imports
+        name: COLA Import Check
+        entry: python scripts/check_cola_imports.py
+        language: system
+        types: [python]
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: check-file-size
+        name: File Size Check
+        entry: python scripts/check_file_size.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: security-scan
+        name: Security Scan
+        entry: python scripts/security_scan.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: check-handoff-log
+        name: HANDOFF_LOG Validator
+        entry: python scripts/check_handoff_log.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: commit-msg-simplify-gate
+        name: Simplify Decision Gate
+        entry: python scripts/hooks/commit_msg_simplify_gate.py
+        language: system
+        stages: [commit-msg]

@@ -188,3 +188,7 @@ Refuse the task and explain why if:
 - The caller asks you to encode a platform-specific fix without a cross-platform alternative.
 - The session you're asked to analyze is not present on disk and the caller has not provided a written summary.
 - The caller asks you to delete an existing rule without justification.
+
+## Receipt Requirement
+
+You do not produce a handoff receipt (your output is a retrospective, not a code delivery). However, when you audit a sub-phase, you MUST read `planning/phase-NN/HANDOFF_LOG.md` and treat any missing skill invocations, missing Rule 3 verifications, or unexplained scope-override entries (from `.claude/scope-override-audit.log`) as Findings worth amending process docs over.

@@ -1,0 +1,103 @@
+# .claude/scope.yaml — Path-to-agent ownership manifest
+#
+# This file is the single source of truth for which agent owns which paths.
+# The PreToolUse scope guard (scripts/hooks/pretool_scope_guard.py) reads
+# this file to enforce boundaries at runtime.
+#
+# Glob syntax: fnmatch patterns relative to repo root.
+# "**" matches any number of path components.
+
+main_session:
+  allow:
+    - "planning/**"
+    - "CLAUDE.md"
+    - ".claude/**"
+    - "docs/**"
+    - "HANDOFF_LOG.md"
+  note: "Main session is the orchestrator. All code changes must be delegated to subagents."
+
+agents:
+  frontend-agent:
+    allow:
+      - "frontend/src/**"
+      - "frontend/public/**"
+      - "frontend/*.config.*"
+      - "frontend/tsconfig.json"
+      - "frontend/package.json"
+      - "frontend/package-lock.json"
+      - "frontend/.gitignore"
+      - "frontend/tests/**"
+      - "frontend/.eslintrc*"
+      - "frontend/eslint.config.*"
+
+  backend-agent:
+    allow:
+      - "backend/app/application/**"
+      - "backend/app/domain/rules/**"
+      - "backend/app/domain/events/**"
+      - "backend/app/domain/errors/**"
+      - "backend/app/api/**"
+      - "backend/tests/application/**"
+      - "backend/tests/api/**"
+
+  database-agent:
+    allow:
+      - "backend/app/infrastructure/database/**"
+      - "backend/app/domain/entities/**"
+      - "backend/app/domain/value_objects/**"
+      - "alembic/**"
+      - "backend/tests/domain/**"
+      - "backend/tests/infrastructure/database/**"
+
+  payments-agent:
+    allow:
+      - "backend/app/infrastructure/payments/**"
+      - "backend/app/application/ports/payment_gateway.py"
+      - "backend/tests/infrastructure/payments/**"
+
+  devops-agent:
+    allow:
+      - "docker-compose.yml"
+      - "backend/Dockerfile"
+      - "frontend/Dockerfile"
+      - "Dockerfile"
+      - "Dockerfile.backend"
+      - "Dockerfile.frontend"
+      - "backend/pyproject.toml"
+      - "backend/alembic.ini"
+      - "scripts/**"
+      - ".github/**"
+      - ".pre-commit-config.yaml"
+      - ".env.example"
+      - ".gitleaks.toml"
+      - ".dockerignore"
+      - "frontend/.dockerignore"
+      - "backend/.dockerignore"
+      - "frontend/vitest.config.ts"
+      - "frontend/playwright.config.ts"
+      - "frontend/tsconfig.json"
+      - "frontend/package.json"
+      - ".gitignore"
+      - ".claude/scope.yaml"
+      - ".claude/settings.json"
+
+  security-agent:
+    allow:
+      - "backend/app/api/middleware/**"
+      - "backend/app/infrastructure/config/**"
+      - ".gitignore"
+      - "scripts/security_scan.py"
+      - "planning/**/SECURITY_REVIEW.md"
+
+  i18n-agent:
+    allow:
+      - "frontend/public/locales/**"
+      - "frontend/src/lib/i18n.ts"
+      - "frontend/src/lib/i18n/**"
+
+  efficiency-agent:
+    allow:
+      - ".claude/agents/**"
+      - "CLAUDE.md"
+      - "docs/DEVELOPMENT_RULEBOOK.MD"
+      - "planning/**/RETROSPECTIVE.md"

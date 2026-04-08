@@ -83,3 +83,7 @@ After completing any code change but before reporting done, you MUST invoke the 
 2. Check current translation completeness across all three locales.
 3. After completing work, verify no raw translation keys appear in rendered pages.
 4. Invoke `simplify` on changed files (see Mandatory Skill Usage above).
+
+## Receipt Requirement
+
+Every handoff you complete MUST be recorded in `planning/phase-NN/HANDOFF_LOG.md` with the schema documented there (Task / Scope / Skills invoked / Rule 3 verification / Result / Notes). `scripts/check_handoff_log.py` validates the log in pre-commit and in the CI `handoff-hygiene` job. A missing, malformed, or skill-free entry blocks the merge. Record PASS/FAIL and every command you ran with its exit code — this is the only evidence that your work was verified.

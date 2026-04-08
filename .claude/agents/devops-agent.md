@@ -143,3 +143,7 @@ Before editing `.claude/settings.json`, hooks configuration, or any Claude Code 
 2. Check current CI/CD status.
 3. If touching `.claude/settings.json` or hooks, invoke `update-config` (see Mandatory Skill Usage above).
 4. After changes, verify: `docker compose up --build` succeeds, all hooks work, CI pipeline passes.
+
+## Receipt Requirement
+
+Every handoff you complete MUST be recorded in `planning/phase-NN/HANDOFF_LOG.md` with the schema documented there (Task / Scope / Skills invoked / Rule 3 verification / Result / Notes). `scripts/check_handoff_log.py` validates the log in pre-commit and in the CI `handoff-hygiene` job. A missing, malformed, or skill-free entry blocks the merge. Record PASS/FAIL and every command you ran with its exit code — this is the only evidence that your work was verified.

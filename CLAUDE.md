@@ -111,6 +111,14 @@ Full process details are in `docs/DEVELOPMENT_RULEBOOK.MD`. These are the non-ne
 | DevOps Agent | Root configs, `scripts/`, CI/CD, Docker files | Application code |
 | Efficiency Agent | `.claude/agents/*.md`, `CLAUDE.md`, `docs/DEVELOPMENT_RULEBOOK.MD`, `planning/**/RETROSPECTIVE.md` (process docs only) | All code, tests, infrastructure, `.claude/settings.json` |
 
+### Runtime enforcement
+
+The scope table above is enforced at runtime by `scripts/hooks/pretool_scope_guard.py`, which reads `.claude/scope.yaml` (the machine-readable source of truth) and blocks `Write`/`Edit` calls outside the caller's allow list. Main session is restricted to `planning/**`, `CLAUDE.md`, `.claude/**`, `docs/**`. If you genuinely need to edit an out-of-scope file (emergency unblock only), write a justification to `.claude/scope-override`: the next edit consumes the file, logs the reason to `.claude/scope-override-audit.log` (git-tracked), and proceeds. More than one override per sub-phase is a retrospective finding.
+
+Every handoff must be recorded in `planning/phase-NN/HANDOFF_LOG.md` with the schema documented there. `scripts/check_handoff_log.py` validates the log in pre-commit and in the CI `handoff-hygiene` job — a missing or malformed entry blocks the merge.
+
+Every sub-phase commit that touches `backend/app/**` or `frontend/src/**` must carry a `Simplify:` decision in the commit body: `Simplify: ran, clean` / `Simplify: ran, <N> findings addressed ...` / `Simplify: waived — <reason>`. The `scripts/hooks/commit_msg_simplify_gate.py` commit-msg hook rejects commits that don't. `git commit --no-verify` is denied by `.claude/settings.json` — do not attempt to bypass.
+
 ### While writing code
 
 - **Fail loudly.** Never swallow errors. No bare `except:` or `except Exception: pass` in Python. No empty catch blocks in TypeScript. No unhandled promise rejections. If something fails, surface it. The only exception: items documented with `# FAIL-QUIET-EXCEPTION:` comment, including rationale, logged at WARNING level minimum, and approved in the phase plan document.

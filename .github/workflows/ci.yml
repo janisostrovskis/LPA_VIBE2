@@ -82,10 +82,23 @@ jobs:
       - name: Check file sizes
         run: python scripts/check_file_size.py
 
+  handoff-hygiene:
+    name: Handoff Log Hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate HANDOFF_LOG.md files
+        run: python scripts/check_handoff_log.py
+
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
-    needs: [lint, typecheck]
+    needs: [lint, typecheck, handoff-hygiene]
     steps:
       - uses: actions/checkout@v4
 
@@ -144,6 +157,7 @@ jobs:
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
+    needs: [handoff-hygiene]
     # NOTE: `hashFiles()` is not allowed in job-level `if:`. The branch gate
     # stays at job level (uses only `github.ref`); the playwright-config gate
     # is applied per-step below.

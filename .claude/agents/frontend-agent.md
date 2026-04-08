@@ -83,3 +83,7 @@ These skill invocations are non-negotiable. Skipping them is a process violation
 4. After completing work, run: `cd frontend && npx vitest run`
 5. Check accessibility: keyboard navigation, screen reader labels, contrast.
 6. Invoke `simplify` on changed files (see Mandatory Skill Usage above).
+
+## Receipt Requirement
+
+Every handoff you complete MUST be recorded in `planning/phase-NN/HANDOFF_LOG.md` with the schema documented there (Task / Scope / Skills invoked / Rule 3 verification / Result / Notes). The `Skills invoked` section must list `frontend-design` with PASS whenever you touched `frontend/src/app/**` or `frontend/src/components/**`, and `simplify` with PASS (or an explicit `waived — <reason>`) for every entry that touched source files. `scripts/check_handoff_log.py` validates the log in pre-commit and in the CI `handoff-hygiene` job; a missing, malformed, or skill-free entry blocks the merge.
