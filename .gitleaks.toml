@@ -1,0 +1,17 @@
+# Gitleaks configuration for the LPA project.
+# Extends the default ruleset; only adds allowlists.
+
+[extend]
+useDefault = true
+
+# Project-wide allowlist for AWS's documented public example key.
+# AKIAIOSFODNN7EXAMPLE appears in:
+#   - scripts/security_scan.py (the regex-based scanner's selftest fixture
+#     and embedded examples documenting what it detects)
+#   - planning/phase-00-foundation/PLAN.md (documentation citing the same
+#     selftest behaviour)
+# It is NOT a real credential — it is the canonical placeholder published
+# by AWS itself in their docs (https://docs.aws.amazon.com/IAM/latest/UserGuide/security-creds.html).
+[allowlist]
+description = "AWS canonical example access key, used in scanner self-tests and docs"
+regexes = ['''AKIAIOSFODNN7EXAMPLE''']

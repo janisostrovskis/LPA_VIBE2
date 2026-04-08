@@ -228,6 +228,7 @@ jobs:
         run: >
           /tmp/gitleaks detect
           --source .
+          --config .gitleaks.toml
           --no-banner
           --redact
           --exit-code 1
@@ -236,6 +237,7 @@ jobs:
         run: >
           /tmp/gitleaks detect
           --source .
+          --config .gitleaks.toml
           --no-banner
           --redact
           --exit-code 1
