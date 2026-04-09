@@ -172,3 +172,5 @@ find backend/ frontend/ -name "*.py" -o -name "*.ts" -o -name "*.tsx" | xargs wc
 ## Receipt Requirement
 
 Every audit you complete MUST be recorded in `planning/phase-NN/HANDOFF_LOG.md` with the schema documented there (Task / Scope / Skills invoked / Rule 3 verification / Result / Notes). For audits, the "Scope" lists the files/directories reviewed and "Rule 3 verification" lists the tool commands you ran (bandit, semgrep, pip-audit, gitleaks, etc.) with their exit codes. `scripts/check_handoff_log.py` validates the log in pre-commit and in the CI `handoff-hygiene` job.
+
+- **Rule 3 terminal step (mandatory).** Your Rule 3 sequence MUST end with `pre-commit run --files <space-separated changed files>` and the exit code MUST be 0. The pre-commit pipeline is the source of truth for acceptance; your custom verification commands are additive, not a substitute. Applies to all handoffs dated 2026-04-09 or later that touch source files.

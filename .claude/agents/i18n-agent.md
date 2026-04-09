@@ -87,3 +87,5 @@ After completing any code change but before reporting done, you MUST invoke the 
 ## Receipt Requirement
 
 Every handoff you complete MUST be recorded in `planning/phase-NN/HANDOFF_LOG.md` with the schema documented there (Task / Scope / Skills invoked / Rule 3 verification / Result / Notes). `scripts/check_handoff_log.py` validates the log in pre-commit and in the CI `handoff-hygiene` job. A missing, malformed, or skill-free entry blocks the merge. Record PASS/FAIL and every command you ran with its exit code — this is the only evidence that your work was verified.
+
+- **Rule 3 terminal step (mandatory).** Your Rule 3 sequence MUST end with `pre-commit run --files <space-separated changed files>` and the exit code MUST be 0. The pre-commit pipeline is the source of truth for acceptance; your custom verification commands are additive, not a substitute. Applies to all handoffs dated 2026-04-09 or later that touch source files.

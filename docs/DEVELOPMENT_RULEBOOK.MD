@@ -245,6 +245,16 @@ Step 4: Proceed
 
 ---
 
+## B.6.1 Rule 3 Verification — Pre-commit Mandate
+
+Every handoff records a "Rule 3 verification" sequence in `planning/phase-NN/HANDOFF_LOG.md` listing the commands that prove the work is correct. Agents historically wrote their own command lists, which drifted from the pre-commit pipeline — `postgresql+psycopg://` and stray test-fixture DB URLs both slipped past Rule 3 in Phase 0 only to be caught later by `pre-commit run`.
+
+**Rule (effective 2026-04-09):** the Rule 3 sequence in any handoff that touches source files MUST end with a backtick-wrapped `pre-commit run --files <space-separated changed files>` command (or `--all-files`) reporting exit 0. The pre-commit pipeline is the source of truth for acceptance; agent-authored commands are additive, not a substitute.
+
+`scripts/check_handoff_log.py` enforces this. Entries dated before 2026-04-09 and entries marked `retrofit: true` are exempt.
+
+---
+
 ## B.7 File Size Enforcement
 
 - **Hard limit:** 2,000 lines per `.py`, `.ts`, or `.tsx` file.

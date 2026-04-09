@@ -16,8 +16,12 @@ Rules:
     `frontend-design` must appear with PASS.
   - For any agent entry touching source files (not pure config):
     `simplify` must appear with PASS or an explicit `waived — <reason>`.
+  - For any agent entry dated 2026-04-09 or later touching source files:
+    the Rule 3 verification section MUST contain a backtick-wrapped command
+    starting with `pre-commit run` (--all-files or --files <anything>).
   - Entries with `retrofit: true` in Notes are exempt from the skills/simplify checks
-    (still require section structure).
+    and from the pre-commit run check (still require section structure).
+  - Entries dated before 2026-04-09 are exempt from the pre-commit run check.
 
 Accepts --bootstrap flag: relaxes all strict checks (used during initial 00d commit
 when check_handoff_log.py itself is being introduced and no entry for 00d exists yet).
@@ -32,7 +36,7 @@ Supports --selftest.
 
 import re
 import sys
-import tempfile
+from datetime import date
 from pathlib import Path
 
 REQUIRED_SUBSECTIONS = [
@@ -65,6 +69,15 @@ FRONTEND_APP_PATTERNS = [
     re.compile(r"^frontend/src/app/"),
     re.compile(r"^frontend/src/components/"),
 ]
+
+# Entries dated on or after this date must include a `pre-commit run` command
+# in their Rule 3 verification section when they touch source files.
+PRECOMMIT_MANDATE_DATE = date(2026, 4, 9)
+
+# Matches a backtick-wrapped pre-commit run command anywhere in Rule 3 text.
+PRECOMMIT_RUN_PATTERN = re.compile(
+    r"`pre-commit run(?:\s+--all-files|\s+--files\s+[^`]+)?`",
+)
 
 
 def is_source_file(path: str) -> bool:
@@ -114,6 +127,22 @@ def parse_entries(content: str) -> list[dict]:
         })
 
     return entries
+
+
+def _parse_entry_date(header: str) -> date | None:
+    """
+    Parse the ISO date from a header of the form '[subphase] — [agent] — [YYYY-MM-DD]'.
+    Looks for a YYYY-MM-DD pattern anywhere in the header to avoid splitting on
+    hyphens within the date itself.
+    Returns None if parsing fails.
+    """
+    match = re.search(r"\b(\d{4}-\d{2}-\d{2})\b", header)
+    if not match:
+        return None
+    try:
+        return date.fromisoformat(match.group(1))
+    except ValueError:
+        return None
 
 
 def validate_entry(entry: dict, bootstrap: bool) -> list[str]:
@@ -202,6 +231,29 @@ def validate_entry(entry: dict, bootstrap: bool) -> list[str]:
                 f"{prefix}: entry touches source files but 'simplify' is not listed "
                 f"with PASS or waived in Skills invoked"
             )
+
+    # Source-touching entries dated 2026-04-09 or later → pre-commit run required
+    # Entries with retrofit: true are exempt.  Entries before the mandate date are exempt.
+    # If the date cannot be parsed, treat as NOT exempt (fail closed).
+    if has_source:
+        entry_date = _parse_entry_date(header)
+        precommit_required = (
+            entry_date is None or entry_date >= PRECOMMIT_MANDATE_DATE
+        )
+        if precommit_required:
+            rule3_match = re.search(
+                r"\*\*Rule 3 verification:\*\*(.*?)(?=\n\*\*|\Z)",
+                body,
+                re.DOTALL,
+            )
+            rule3_text = rule3_match.group(1) if rule3_match else ""
+            if not PRECOMMIT_RUN_PATTERN.search(rule3_text):
+                violations.append(
+                    f"{prefix}: entry dated {entry_date} touches source files but "
+                    f"Rule 3 verification does not contain a backtick-wrapped "
+                    f"`pre-commit run` command (mandatory for entries dated "
+                    f"{PRECOMMIT_MANDATE_DATE} or later)"
+                )
 
     return violations
 
@@ -311,6 +363,66 @@ def run_selftest() -> int:
     code, violations = validate_log(source_no_simplify)
     if code != 1:
         failures.append(f"source-no-simplify: expected 1, got {code}")
+
+    # pre-commit run mandate: source entry dated 2026-04-10 (after cutoff) without
+    # pre-commit run line → must fail
+    precommit_missing = """## 00h — devops-agent — 2026-04-10
+
+- **Task:** Add new feature
+- **Scope (files changed):**
+  - `backend/app/domain/entities/member.py`
+- **Skills invoked:**
+  - `simplify` — PASS
+- **Rule 3 verification:**
+  - `python -m pytest` → exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+"""
+    code, violations = validate_log(precommit_missing)
+    if code != 1:
+        failures.append(
+            f"precommit-missing (post-cutoff): expected 1, got {code}; "
+            f"violations: {violations}"
+        )
+
+    # pre-commit run mandate: source entry dated 2026-04-10 WITH pre-commit run → pass
+    precommit_present = """## 00h — devops-agent — 2026-04-10
+
+- **Task:** Add new feature
+- **Scope (files changed):**
+  - `backend/app/domain/entities/member.py`
+- **Skills invoked:**
+  - `simplify` — PASS
+- **Rule 3 verification:**
+  - `python -m pytest` → exit 0
+  - `pre-commit run --files backend/app/domain/entities/member.py` → exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+"""
+    code, violations = validate_log(precommit_present)
+    if code != 0:
+        failures.append(
+            f"precommit-present (post-cutoff): expected 0, got {code}; "
+            f"violations: {violations}"
+        )
+
+    # pre-commit run mandate: source entry dated 2026-04-07 (before cutoff) without
+    # pre-commit run line → must pass (retroactive exemption)
+    precommit_old_entry = """## 00z — devops-agent — 2026-04-07
+
+- **Task:** Old work before the mandate
+- **Scope (files changed):**
+  - `backend/app/domain/entities/member.py`
+- **Skills invoked:**
+  - `simplify` — PASS
+- **Rule 3 verification:**
+  - `python -m pytest` → exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+"""
+    code, violations = validate_log(precommit_old_entry)
+    if code != 0:
+        failures.append(
+            f"precommit-old-entry (pre-cutoff): expected 0, got {code}; "
+            f"violations: {violations}"
+        )
 
     if failures:
         print("SELFTEST FAILED:", file=sys.stderr)
