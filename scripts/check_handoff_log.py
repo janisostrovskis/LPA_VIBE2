@@ -19,9 +19,14 @@ Rules:
   - For any agent entry dated 2026-04-09 or later touching source files:
     the Rule 3 verification section MUST contain a backtick-wrapped command
     starting with `pre-commit run` (--all-files or --files <anything>).
+  - For any agent entry dated 2026-04-09 or later touching source files that claims
+    `simplify` — PASS (not waived): a simplify-receipt artifact file must exist at
+    <phase_dir>/simplify-receipts/<subphase>-<agent>.md where phase_dir is the
+    directory containing HANDOFF_LOG.md. Skipped when log_path is None (inline tests).
   - Entries with `retrofit: true` in Notes are exempt from the skills/simplify checks
     and from the pre-commit run check (still require section structure).
-  - Entries dated before 2026-04-09 are exempt from the pre-commit run check.
+  - Entries dated before 2026-04-09 are exempt from the pre-commit run check and the
+    simplify-receipt artifact check.
 
 Accepts --bootstrap flag: relaxes all strict checks (used during initial 00d commit
 when check_handoff_log.py itself is being introduced and no entry for 00d exists yet).
@@ -36,6 +41,7 @@ Supports --selftest.
 
 import re
 import sys
+import tempfile
 from datetime import date
 from pathlib import Path
 
@@ -145,9 +151,17 @@ def _parse_entry_date(header: str) -> date | None:
         return None
 
 
-def validate_entry(entry: dict, bootstrap: bool) -> list[str]:
+def validate_entry(
+    entry: dict,
+    bootstrap: bool,
+    log_path: Path | None = None,
+) -> list[str]:
     """
     Validate a single log entry.  Returns a list of violation messages (empty = clean).
+
+    log_path: path to the HANDOFF_LOG.md being validated.  When provided, the
+    simplify-receipt artifact check is performed.  When None (e.g., inline selftest
+    strings without a disk fixture), the artifact check is skipped.
     """
     violations: list[str] = []
     body = entry["body"]
@@ -255,14 +269,58 @@ def validate_entry(entry: dict, bootstrap: bool) -> list[str]:
                     f"{PRECOMMIT_MANDATE_DATE} or later)"
                 )
 
+        # Source-touching entries dated 2026-04-09 or later that claim
+        # `simplify` — PASS (not waived, not N/A) must have a matching
+        # simplify-receipt artifact file on disk.
+        # Skipped when log_path is None (inline selftest without disk fixture).
+        if log_path is not None and precommit_required:
+            simplify_pass = bool(
+                re.search(
+                    r"`?simplify`?\s*[—\-–]\s*PASS",
+                    skills_text,
+                    re.IGNORECASE,
+                )
+            )
+            simplify_waived = bool(
+                re.search(
+                    r"`?simplify`?\s*[—\-–]\s*(?:N/A\s*\(waived|waived)",
+                    skills_text,
+                    re.IGNORECASE,
+                )
+            )
+            if simplify_pass and not simplify_waived:
+                # Derive subphase and agent from header.
+                # Header format: "[subphase] — [agent] — [date]"
+                # Split ONLY on em-dash / en-dash (not plain hyphens) so that
+                # agent names like "devops-agent" are not fragmented.
+                em_parts = re.split(r"\s*[—–]\s*", header)
+                subphase = em_parts[0].strip() if len(em_parts) >= 1 else "unknown"
+                agent = em_parts[1].strip().lower() if len(em_parts) >= 2 else "unknown"
+                phase_dir = log_path.parent
+                expected_artifact = (
+                    phase_dir / "simplify-receipts" / f"{subphase}-{agent}.md"
+                )
+                if not expected_artifact.exists():
+                    violations.append(
+                        f"{prefix}: entry dated {entry_date} claims 'simplify — PASS' "
+                        f"but missing artifact: {expected_artifact}"
+                    )
+
     return violations
 
 
-def validate_log(content: str, bootstrap: bool = False) -> tuple[int, list[str]]:
+def validate_log(
+    content: str,
+    bootstrap: bool = False,
+    log_path: Path | None = None,
+) -> tuple[int, list[str]]:
     """
     Validate full HANDOFF_LOG content.
     Returns (exit_code, [violation_messages]).
     exit_code: 0 = clean, 1 = violations, 2 = schema error.
+
+    log_path: path to the HANDOFF_LOG.md file.  When provided, the simplify-receipt
+    artifact check is performed.  When None (e.g., inline selftest strings), skipped.
     """
     if not content.strip():
         return 0, []
@@ -274,7 +332,7 @@ def validate_log(content: str, bootstrap: bool = False) -> tuple[int, list[str]]
 
     all_violations: list[str] = []
     for entry in entries:
-        violations = validate_entry(entry, bootstrap=bootstrap)
+        violations = validate_entry(entry, bootstrap=bootstrap, log_path=log_path)
         all_violations.extend(violations)
 
     if all_violations:
@@ -424,6 +482,69 @@ def run_selftest() -> int:
             f"violations: {violations}"
         )
 
+    # --- Simplify-receipt artifact checks (3 new cases) ---
+
+    # Shared entry text: post-cutoff, source files, simplify — PASS (no waiver).
+    # Needs a pre-commit run line too (to pass the existing mandate check).
+    artifact_entry = """## 00h — devops-agent — 2026-04-10
+
+- **Task:** Add domain feature
+- **Scope (files changed):**
+  - `backend/app/domain/entities/member.py`
+- **Skills invoked:**
+  - `simplify` — PASS
+- **Rule 3 verification:**
+  - `python -m pytest` → exit 0
+  - `pre-commit run --files backend/app/domain/entities/member.py` → exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+"""
+
+    # Case a: artifact does NOT exist → exit 1
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_log = Path(tmpdir) / "HANDOFF_LOG.md"
+        tmp_log.write_text(artifact_entry, encoding="utf-8")
+        code, violations = validate_log(
+            artifact_entry, log_path=tmp_log
+        )
+        if code != 1:
+            failures.append(
+                f"artifact-missing: expected 1, got {code}; violations: {violations}"
+            )
+        else:
+            # Confirm the violation mentions the artifact filename (path-separator
+            # agnostic — avoids Windows vs POSIX slash mismatch in the check).
+            expected_fragment = "00h-devops-agent.md"
+            if not any(expected_fragment in v for v in violations):
+                failures.append(
+                    f"artifact-missing: violation text missing '{expected_fragment}'; "
+                    f"got: {violations}"
+                )
+
+    # Case b: artifact file pre-created → exit 0
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_log = Path(tmpdir) / "HANDOFF_LOG.md"
+        tmp_log.write_text(artifact_entry, encoding="utf-8")
+        receipts_dir = Path(tmpdir) / "simplify-receipts"
+        receipts_dir.mkdir()
+        (receipts_dir / "00h-devops-agent.md").write_text(
+            "simplify receipt", encoding="utf-8"
+        )
+        code, violations = validate_log(
+            artifact_entry, log_path=tmp_log
+        )
+        if code != 0:
+            failures.append(
+                f"artifact-present: expected 0, got {code}; violations: {violations}"
+            )
+
+    # Case c: log_path=None → artifact check skipped → exit 0
+    code, violations = validate_log(artifact_entry, log_path=None)
+    if code != 0:
+        failures.append(
+            f"artifact-no-log-path: expected 0 (check skipped), got {code}; "
+            f"violations: {violations}"
+        )
+
     if failures:
         print("SELFTEST FAILED:", file=sys.stderr)
         for f in failures:
@@ -460,7 +581,7 @@ def main() -> int:
             print(f"ERROR: cannot read {log_path}: {exc}", file=sys.stderr)
             return 2
 
-        code, violations = validate_log(content, bootstrap=bootstrap)
+        code, violations = validate_log(content, bootstrap=bootstrap, log_path=log_path)
         if code == 2:
             print(f"SCHEMA ERROR in {log_path}:", file=sys.stderr)
             for v in violations:

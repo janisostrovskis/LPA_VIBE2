@@ -33,8 +33,9 @@ Sub-phase 00a delivers the following six files. The remaining nine items from `p
 | **00c** | `frontend/package.json`, `tsconfig.json`, `tailwind.config.ts`, `next.config.ts`, `postcss.config.mjs`, `eslint.config.mjs`, `vitest.config.ts`, `playwright.config.ts`, minimal `src/app/[locale]` hello page + smoke tests, `frontend/Dockerfile`, docker-compose frontend service | Complete |
 | **00d** | Runtime enforcement: `.claude/scope.yaml` manifest, PreToolUse scope guard, HANDOFF_LOG validator, commit-msg Simplify gate, local `.pre-commit-config.yaml`, `handoff-hygiene` CI job | Complete |
 | **00e** | `backend/app/__init__.py`, `backend/app/lib/{result,errors,logger}.py` + tests (bootstraps `backend/app/` package tree) | Complete |
-| **00f** | `backend/app/infrastructure/config/env.py` (Pydantic Settings, fail-loudly validation) + F1 fix (scope.yaml HANDOFF_LOG carve-out) | **In progress** |
+| **00f** | `backend/app/infrastructure/config/env.py` (Pydantic Settings, fail-loudly validation) + F1 fix (scope.yaml HANDOFF_LOG carve-out) | Complete |
 | 00g | Full empty folder tree with `__init__.py` files matching the COLA layer layout | Not started |
+| **00h** | Workflow hardening: Rule 3 pre-commit mandate (H1) + dispatch preamble & "Execution vs planning" subsections (H2) + pre-flight dispatch validator + scope_matcher refactor (H3) + simplify receipt artifacts (H4). Findings F2 (scope.yaml self-amendment) and F3 (Bash bypass of scope guard) filed for cycle-3 efficiency-agent retrospective. | **Complete** |
 
 The Phase 0 testing gate from `planning/MASTER_PLAN.md` line 262 ("Both services start via Docker Compose. Pre-commit hooks reject a deliberately oversized file AND a deliberately wrong-layer import. CI pipeline passes on a clean commit.") cannot fully PASS until 00b–00f complete. 00a delivers the *halves* of those checks that are local-only (script self-tests). The Docker Compose half lands in 00b.
 

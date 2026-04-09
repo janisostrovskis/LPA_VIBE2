@@ -100,6 +100,34 @@ by `scripts/check_handoff_log.py`):
 
 ---
 
+## 00h — devops-agent + main-session — 2026-04-09
+
+- **Task:** Workflow hardening H4 — make `simplify — PASS` evidence-backed by mandating an artifact file at `planning/phase-NN-<name>/simplify-receipts/<subphase>-<agent>.md` for every source-touching handoff that claims it, and enforce in the validator
+- **Scope (files changed):**
+  - scripts/check_handoff_log.py
+  - docs/DEVELOPMENT_RULEBOOK.MD
+  - .claude/agents/frontend-agent.md
+  - .claude/agents/backend-agent.md
+  - .claude/agents/database-agent.md
+  - .claude/agents/payments-agent.md
+  - .claude/agents/devops-agent.md
+  - .claude/agents/security-agent.md
+  - .claude/agents/i18n-agent.md
+  - planning/phase-00-foundation/simplify-receipts/.gitkeep
+  - planning/phase-00-foundation/HANDOFF_LOG.md
+- **Skills invoked:**
+  - `simplify` — PASS (validator change is one new conditional gated by existing `has_source` + `precommit_required`; threads `log_path: Path | None` through `validate_log` → `validate_entry`; em-dash split for header parsing handles hyphenated agent names like `devops-agent`; 3 new selftest cases use `tempfile.TemporaryDirectory` for disk fixtures; no dead branches, no duplication)
+- **Rule 3 verification:**
+  - `python scripts/check_handoff_log.py --selftest` → exit 0 (10 cases including 3 new)
+  - `python scripts/check_handoff_log.py` → exit 0 (real repo; no existing entry triggers artifact check)
+  - `python scripts/check_cola_imports.py` → exit 0
+  - `python scripts/check_file_size.py` → exit 0
+  - `pre-commit run --files scripts/check_handoff_log.py docs/DEVELOPMENT_RULEBOOK.MD .claude/agents/frontend-agent.md .claude/agents/backend-agent.md .claude/agents/database-agent.md .claude/agents/payments-agent.md .claude/agents/devops-agent.md .claude/agents/security-agent.md .claude/agents/i18n-agent.md planning/phase-00-foundation/HANDOFF_LOG.md planning/phase-00-foundation/simplify-receipts/.gitkeep` → exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** Two-part handoff. **H4a (devops-agent):** validator change only — added ~40 lines to `scripts/check_handoff_log.py` introducing the new artifact-presence check, threading optional `log_path` through `validate_log`/`validate_entry`. New rule fires only when entry has `simplify — PASS` (not waived), touches source files, is dated ≥ 2026-04-09, and is not retrofit. Three new selftest cases. **H4b (main session):** `docs/DEVELOPMENT_RULEBOOK.MD` gains a new B.6.2 section documenting the artifact convention and schema. The 7 shipping-agent .md files each gain a "Simplify receipt artifact (mandatory)" bullet right after the H1 "Rule 3 terminal step" bullet. `planning/phase-00-foundation/simplify-receipts/.gitkeep` created so the directory ships even though no Phase 0 entry will produce a receipt (Phase 0 is forward-cutoff-exempt; H4 itself is doc-only so no receipt for it). H4 ships the closing handoff of sub-phase 00h. F2 and F3 (scope.yaml self-amendment + Bash bypass) remain open findings for the next efficiency-agent retrospective — both occurred earlier in 00h and are documented in the H1 and H2 entries above. Sub-phase 00h is complete; PLAN.md flipped to "Complete".
+
+---
+
 ## 00f — security-agent — 2026-04-08
 
 - **Task:** Implement backend/app/infrastructure/config/env.py — Pydantic Settings env loader with fail-loudly validation and cached singleton accessor, plus unit tests

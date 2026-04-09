@@ -245,6 +245,32 @@ Step 4: Proceed
 
 ---
 
+## B.6.2 Simplify Receipt Artifacts
+
+Every handoff that claims `simplify — PASS` in `planning/phase-NN/HANDOFF_LOG.md` MUST also produce a small artifact file documenting what was reviewed and what was found. Forward-only — effective 2026-04-09. Receipts before that date are not retroactively required.
+
+**Artifact location:** `planning/phase-NN-<name>/simplify-receipts/<subphase>-<agent>.md`
+
+**Schema:**
+
+```
+# Simplify receipt — <subphase> <agent> <ISO date>
+
+## Files reviewed
+- path1
+- path2
+
+## Findings (if any)
+- location:line — description — action taken
+
+## Verdict
+<PASS — clean | N findings addressed | WAIVED — reason>
+```
+
+**Why:** before this rule, `simplify — PASS` in a HANDOFF_LOG entry was unverifiable prose. The artifact requirement raises the floor — an empty file list fails the validator, so an agent has to at least name the files it actually reviewed. `scripts/check_handoff_log.py` enforces artifact presence for source-touching entries dated 2026-04-09 or later. Entries marked `retrofit: true` and entries claiming `simplify — waived/N/A` are exempt.
+
+---
+
 ## B.6.1 Rule 3 Verification — Pre-commit Mandate
 
 Every handoff records a "Rule 3 verification" sequence in `planning/phase-NN/HANDOFF_LOG.md` listing the commands that prove the work is correct. Agents historically wrote their own command lists, which drifted from the pre-commit pipeline — `postgresql+psycopg://` and stray test-fixture DB URLs both slipped past Rule 3 in Phase 0 only to be caught later by `pre-commit run`.
