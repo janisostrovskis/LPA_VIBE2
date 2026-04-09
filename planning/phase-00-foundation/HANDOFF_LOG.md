@@ -75,6 +75,31 @@ by `scripts/check_handoff_log.py`):
 
 ---
 
+## 00h — devops-agent — 2026-04-09
+
+- **Task:** Workflow hardening H3 — create scripts/hooks/scope_matcher.py (shared path-matching helper) and scripts/preflight_dispatch.py (orchestrator pre-flight scope check before subagent dispatch)
+- **Scope (files changed):**
+  - scripts/hooks/scope_matcher.py
+  - scripts/preflight_dispatch.py
+  - planning/phase-00-foundation/HANDOFF_LOG.md
+- **Skills invoked:**
+  - `simplify` — PASS (scope_matcher.py: 100 lines, clean public API, verbatim YAML parser copy documented with TODO; preflight_dispatch.py: 220 lines, run_check separated from CLI for testability, _import_scope_matcher loads from script location not repo_root, no dead branches)
+  - `update-config` — N/A (no settings.json or scope.yaml edit)
+- **Rule 3 verification:**
+  - `python scripts/preflight_dispatch.py --selftest` → exit 0
+  - `python scripts/hooks/pretool_scope_guard.py --selftest` → exit 0
+  - `python scripts/preflight_dispatch.py --agent security-agent --files backend/app/infrastructure/config/env.py backend/tests/infrastructure/config/test_env.py planning/phase-00-foundation/HANDOFF_LOG.md` → exit 0
+  - `python scripts/preflight_dispatch.py --agent frontend-agent --files backend/app/domain/entities/user.py` → exit 1
+  - `python scripts/preflight_dispatch.py --agent backend-agent --files backend/app/application/use_cases/foo.py` → exit 0 + REMINDER in stdout
+  - `python scripts/check_handoff_log.py` → exit 0
+  - `python scripts/check_cola_imports.py` → exit 0
+  - `python scripts/check_file_size.py` → exit 0
+  - `pre-commit run --files scripts/preflight_dispatch.py scripts/hooks/scope_matcher.py scripts/hooks/pretool_scope_guard.py planning/phase-00-foundation/HANDOFF_LOG.md` → exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** Refactor approach: duplication fallback. `scope_matcher.py` duplicates the YAML parser verbatim from `pretool_scope_guard.py` with a `# TODO: dedupe` comment. `pretool_scope_guard.py` is left unchanged — its matcher logic is woven through its internal flow in a way that would require more restructuring than is safe for a pre-commit hook. The new public API (`load_manifest`, `agent_allows`, `matching_glob`) is clean and reusable. `preflight_dispatch.py` imports scope_matcher via importlib from its co-located `hooks/` directory, not from `repo_root`, so the selftest temp-dir fixtures work correctly. The REMINDER feature triggers for any file matching `backend/app/**` or `frontend/src/**`, regardless of whether the overall dispatch passes or fails.
+
+---
+
 ## 00f — security-agent — 2026-04-08
 
 - **Task:** Implement backend/app/infrastructure/config/env.py — Pydantic Settings env loader with fail-loudly validation and cached singleton accessor, plus unit tests
