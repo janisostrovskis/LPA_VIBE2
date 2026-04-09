@@ -154,6 +154,29 @@ by `scripts/check_handoff_log.py`):
 
 ---
 
+## 00i — devops-agent — 2026-04-09
+
+- **Task:** 00i H2 — PostToolUse Bash scope guard to close Finding F3 (Bash tool bypasses Write|Edit PreToolUse scope guard)
+- **Scope (files changed):**
+  - scripts/hooks/pretool_bash_baseline.py
+  - scripts/hooks/posttool_bash_scope_guard.py
+  - .claude/settings.json
+  - planning/phase-00-foundation/HANDOFF_LOG.md
+- **Skills invoked:**
+  - `update-config` — PASS (invoked before editing .claude/settings.json per Mandatory Skill Usage rule)
+  - `simplify` — PASS (see planning/phase-00-foundation/simplify-receipts/00i-H2-devops-agent.md — NOTE: artifact will be created by main session because planning/**/simplify-receipts/ is in main-session scope, not devops scope; validator will pass after main session writes the receipt before committing)
+- **Rule 3 verification:**
+  - `python scripts/hooks/pretool_bash_baseline.py --selftest` → exit 0
+  - `python scripts/hooks/posttool_bash_scope_guard.py --selftest` → exit 0
+  - `python scripts/hooks/pretool_scope_guard.py --selftest` → exit 0
+  - `python -c "import json; json.load(open('.claude/settings.json'))"` → exit 0
+  - `python scripts/check_handoff_log.py --selftest` → exit 0
+  - `pre-commit run --files scripts/hooks/pretool_bash_baseline.py scripts/hooks/posttool_bash_scope_guard.py .claude/settings.json` → exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** Closes Finding F3 from 00h H2. Two new hooks added to .claude/settings.json: a PreToolUse/Bash hook that snapshots the git working-tree state into .claude/bash-baseline.json, and a PostToolUse/Bash hook that diffs the post-Bash state against the baseline and reverts any files written outside the active agent's scope. Revert strategy: `git checkout --` for tracked files, `rm -f` for untracked files. Fail-open on missing/corrupt baseline — guard gap preferred over destroying unsaved work. The posttool hook imports scope_matcher via importlib from scripts/hooks/ (same pattern as preflight_dispatch.py). Both scripts carry 2 and 5 selftest cases respectively, all passing. The simplify receipt artifact path is planning/phase-00-foundation/simplify-receipts/00i-H2-devops-agent.md — main session will create this before committing because that directory is main-session scope only.
+
+---
+
 ## 00f — security-agent — 2026-04-08
 
 - **Task:** Implement backend/app/infrastructure/config/env.py — Pydantic Settings env loader with fail-loudly validation and cached singleton accessor, plus unit tests

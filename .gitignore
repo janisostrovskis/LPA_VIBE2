@@ -40,6 +40,8 @@ out/
 
 # ---------- Claude Code (local) ----------
 .claude/settings.local.json
+.claude/bash-baseline.json
+.claude/scope-hook-debug.log
 
 # ---------- IDE ----------
 .vscode/

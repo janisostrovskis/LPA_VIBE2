@@ -79,6 +79,28 @@
             "statusMessage": "Checking scope guard..."
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python scripts/hooks/pretool_bash_baseline.py",
+            "statusMessage": "Snapshotting baseline..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python scripts/hooks/posttool_bash_scope_guard.py",
+            "statusMessage": "Checking Bash scope guard..."
+          }
+        ]
       }
     ]
   },
