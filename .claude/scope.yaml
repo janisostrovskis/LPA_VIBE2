@@ -26,7 +26,8 @@ main_session:
     - ".claude/**"
     - "docs/**"
     - "HANDOFF_LOG.md"
-  note: "Main session is the orchestrator. All code changes must be delegated to subagents. Main session exclusively owns the governance files listed in the header comment."
+    - "frontend/package-lock.json"
+  note: "Main session is the orchestrator. All code changes must be delegated to subagents. Main session exclusively owns the governance files listed in the header comment. `frontend/package-lock.json` is a generated artifact regenerated via `npm install`; main session may regenerate it during orchestration (added 01b H2 after frontend-agent subagents repeatedly failed to update the lockfile)."
 
 agents:
   frontend-agent:

@@ -17,3 +17,6 @@ iso_timestamp,phase,handoff,event,ref,run_id,notes
 2026-04-09T10:25:02.798895+00:00,01a,H1,ci-green,,24185192435,
 2026-04-09T10:50:30.861620+00:00,01b,H1,dispatch-start,,,
 2026-04-09T10:54:18.831023+00:00,01b,H1,dispatch-end,,,
+2026-04-09T10:56:12.541231+00:00,01b,H1,commit,6e4a40e,,
+2026-04-09T10:57:20.928323+00:00,01b,H2,dispatch-start,,,
+2026-04-09T11:52:22.258955+00:00,01b,H2,dispatch-end,,,

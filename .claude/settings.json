@@ -75,7 +75,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python scripts/hooks/pretool_scope_guard.py",
+            "command": "python ${CLAUDE_PROJECT_DIR}/scripts/hooks/pretool_scope_guard.py",
             "statusMessage": "Checking scope guard..."
           }
         ]
@@ -85,7 +85,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python scripts/hooks/pretool_bash_baseline.py",
+            "command": "python ${CLAUDE_PROJECT_DIR}/scripts/hooks/pretool_bash_baseline.py",
             "statusMessage": "Snapshotting baseline..."
           }
         ]
@@ -97,7 +97,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python scripts/hooks/posttool_bash_scope_guard.py",
+            "command": "python ${CLAUDE_PROJECT_DIR}/scripts/hooks/posttool_bash_scope_guard.py",
             "statusMessage": "Checking Bash scope guard..."
           }
         ]
