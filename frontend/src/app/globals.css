@@ -2,16 +2,124 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * LPA Design System v2.0 — Material Design 3 tokens (Sage & Canvas snapshot)
+ *
+ * Surface hierarchy (the no-line rule):
+ * Depth is expressed by stacking surface tiers, not by drawing 1px borders.
+ * A card on a page body uses surface-container-lowest over a
+ * surface-container-low background. The visual hierarchy follows:
+ *
+ *   surface-container-lowest (#FFFFFF)   <- top-layer cards, inputs, elevated
+ *   surface-container-low    (#F6F3F2)   <- default section background
+ *   surface                  (#FCF9F8)   <- page body canvas
+ *   surface-container        (#F0EDED)   <- nested content blocks
+ *   surface-container-high   (#EAE7E7)   <- active/selected states, input fills
+ *   surface-container-highest(#E5E2E1)   <- deepest containers, modal backdrops
+ *
+ * Prohibited: border: 1px solid ... to section content.
+ * Ghost Border fallback: use outline-variant (#C5C8BC) at 15-20% opacity
+ * for affordance-critical lines (focused inputs). Never the solid outline token.
+ */
+
 :root {
-  --lpa-ink: #1a1a1a;
-  --lpa-canvas: #ffffff;
-  --lpa-canvas-soft: #f8f8f8;
-  --lpa-text-secondary: #4a4a4a;
-  --lpa-text-tertiary: #8a8a8a;
-  --lpa-border-light: #e2e2e2;
-  --lpa-divider-subtle: #efefef;
-  --lpa-accent-sage: #9caf88;
-  --lpa-accent-mint: #e8f4f0;
-  --lpa-accent-beige: #e8dcc4;
-  --lpa-accent-taupe: #c9b8a8;
+  /* Surface hierarchy (backgrounds + fills, no borders for sectioning) */
+  --lpa-surface:                    #FCF9F8;
+  --lpa-surface-bright:             #FCF9F8;
+  --lpa-surface-dim:                #DCD9D9;
+  --lpa-surface-container-lowest:   #FFFFFF;
+  --lpa-surface-container-low:      #F6F3F2;
+  --lpa-surface-container:          #F0EDED;
+  --lpa-surface-container-high:     #EAE7E7;
+  --lpa-surface-container-highest:  #E5E2E1;
+  --lpa-surface-variant:            #E5E2E1;
+
+  /* Primary (Ink) */
+  --lpa-primary:                    #5F5E5E;
+  --lpa-primary-container:          #AAA8A8;
+  --lpa-primary-fixed:              #E5E2E1;
+  --lpa-primary-fixed-dim:          #C8C6C5;
+  --lpa-on-primary:                 #FFFFFF;
+  --lpa-on-primary-container:       #3E3D3D;
+  --lpa-on-primary-fixed:           #1C1B1B;
+  --lpa-on-primary-fixed-variant:   #474746;
+
+  /* Secondary (Sage) */
+  --lpa-secondary:                  #526442;
+  --lpa-secondary-container:        #D2E6BC;
+  --lpa-secondary-fixed:            #D5E9BF;
+  --lpa-secondary-fixed-dim:        #B9CDA4;
+  --lpa-on-secondary:               #FFFFFF;
+  --lpa-on-secondary-container:     #576846;
+  --lpa-on-secondary-fixed:         #111F05;
+  --lpa-on-secondary-fixed-variant: #3B4C2C;
+
+  /* Tertiary (Beige) */
+  --lpa-tertiary:                   #665E4B;
+  --lpa-tertiary-container:         #B2A892;
+  --lpa-tertiary-fixed:             #EDE1C9;
+  --lpa-tertiary-fixed-dim:         #D1C5AE;
+  --lpa-on-tertiary:                #FFFFFF;
+  --lpa-on-tertiary-container:      #443D2C;
+  --lpa-on-tertiary-fixed:          #211B0C;
+  --lpa-on-tertiary-fixed-variant:  #4D4634;
+
+  /* Error */
+  --lpa-error:                      #BA1A1A;
+  --lpa-error-container:            #FFDAD6;
+  --lpa-on-error:                   #FFFFFF;
+  --lpa-on-error-container:         #93000A;
+
+  /* Text + outlines */
+  --lpa-on-background:              #1C1B1B;
+  --lpa-on-surface:                 #1C1B1B;
+  --lpa-on-surface-variant:         #44483F;
+  --lpa-outline:                    #75786E;
+  --lpa-outline-variant:            #C5C8BC;
+  --lpa-surface-tint:               #5F5E5E;
+
+  /* Inverse (dark overlays, toasts, snackbars) */
+  --lpa-inverse-surface:            #313030;
+  --lpa-inverse-on-surface:         #F3F0EF;
+  --lpa-inverse-primary:            #C8C6C5;
+
+  /* Brand anchor aliases (readable names for component props) */
+  --lpa-ink:                        #1A1A1A;
+  --lpa-sage:                       #9CAF88;
+  --lpa-beige:                      #E8DCC4;
+  --lpa-canvas:                     #FCF9F8;
+
+  /* Typography */
+  --lpa-font-display:  "Epilogue", "Cormorant Garamond", Georgia, serif;
+  --lpa-font-headline: "Epilogue", "Cormorant Garamond", Georgia, serif;
+  --lpa-font-body:     "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --lpa-font-label:    "Manrope", "Inter", system-ui, sans-serif;
+
+  /* Shadows */
+  --lpa-cloud-shadow:      0 12px 32px rgba(28, 27, 27, 0.06);
+  --lpa-cloud-shadow-lift: 0 20px 60px rgba(28, 27, 27, 0.05);
+}
+
+body {
+  font-family: var(--font-manrope), "Manrope", "Inter", system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  background: var(--lpa-surface);
+  color: var(--lpa-on-surface);
+}
+
+/*
+ * Motion: respect prefers-reduced-motion per LPA Design Language v2.0 Section 8.
+ * All transforms and transitions are disabled when the user has requested
+ * reduced motion. This is mandatory per WCAG 2.2 AA.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

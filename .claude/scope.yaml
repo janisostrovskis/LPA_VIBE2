@@ -42,6 +42,7 @@ agents:
       - "frontend/.eslintrc*"
       - "frontend/eslint.config.*"
       - "planning/**/HANDOFF_LOG.md"
+      - "planning/**/simplify-receipts/**"
 
   backend-agent:
     allow:
@@ -57,6 +58,7 @@ agents:
       - "backend/tests/api/**"
       - "backend/tests/lib/**"
       - "planning/**/HANDOFF_LOG.md"
+      - "planning/**/simplify-receipts/**"
 
   database-agent:
     allow:
@@ -67,6 +69,7 @@ agents:
       - "backend/tests/domain/**"
       - "backend/tests/infrastructure/database/**"
       - "planning/**/HANDOFF_LOG.md"
+      - "planning/**/simplify-receipts/**"
 
   payments-agent:
     allow:
@@ -74,6 +77,7 @@ agents:
       - "backend/app/application/ports/payment_gateway.py"
       - "backend/tests/infrastructure/payments/**"
       - "planning/**/HANDOFF_LOG.md"
+      - "planning/**/simplify-receipts/**"
 
   devops-agent:
     allow:
@@ -99,6 +103,7 @@ agents:
       - "frontend/package.json"
       - ".gitignore"
       - "planning/**/HANDOFF_LOG.md"
+      - "planning/**/simplify-receipts/**"
 
   security-agent:
     allow:
@@ -109,6 +114,7 @@ agents:
       - "scripts/security_scan.py"
       - "planning/**/SECURITY_REVIEW.md"
       - "planning/**/HANDOFF_LOG.md"
+      - "planning/**/simplify-receipts/**"
       - "backend/tests/infrastructure/__init__.py"
       - "backend/tests/infrastructure/config/**"
 
@@ -118,6 +124,7 @@ agents:
       - "frontend/src/lib/i18n.ts"
       - "frontend/src/lib/i18n/**"
       - "planning/**/HANDOFF_LOG.md"
+      - "planning/**/simplify-receipts/**"
 
   efficiency-agent:
     allow:

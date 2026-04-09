@@ -119,6 +119,8 @@ def get_tracked_files() -> list[str]:
         ["git", "ls-files"],
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         check=True,
     )
     return [line for line in result.stdout.splitlines() if line.strip()]

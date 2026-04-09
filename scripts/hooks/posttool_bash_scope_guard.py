@@ -126,6 +126,8 @@ def _git_status_porcelain(repo_root: Path) -> str:
         ["git", "status", "--porcelain=v1", "--untracked-files=all"],
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         cwd=str(repo_root),
     )
     return result.stdout
@@ -152,6 +154,8 @@ def _revert_file(rel_path: str, is_untracked: bool, repo_root: Path) -> str:
             ["git", "checkout", "--", rel_path],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             cwd=str(repo_root),
         )
         if result.returncode == 0:
