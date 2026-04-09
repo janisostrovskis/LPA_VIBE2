@@ -142,6 +142,32 @@ Every execution brief sent to a shipping agent (frontend, backend, database, pay
 
 The preamble exists because subagents repeatedly entered plan mode in Phase 0 sub-phases 00e and 00f, costing dispatch roundtrips. The exact sentence is matchable by future enforcement tooling. Briefs that omit it are presumed defective.
 
+### Parallel dispatch for independent handoffs
+
+When a plan contains two or more handoffs with **no file overlap and no ordering dependency**, main session MUST dispatch them as multiple `Agent` tool calls in a **single message**. Serializing independent handoffs wastes one full dispatch roundtrip (~several minutes) per parallelizable pair.
+
+Worked example — 00h H1 and H3 were independent (H1 edited `scripts/check_handoff_log.py` + 7 agent `.md` files under devops scope; H3 edited `scripts/preflight_dispatch.py` + `scripts/hooks/scope_matcher.py` under devops scope; no file overlap). They shipped sequentially and cost ~5 minutes of wasted wall-clock. The correct pattern would have been one message containing two `Agent(subagent_type="devops-agent", ...)` calls.
+
+Pre-flight protocol for parallel dispatch:
+1. For each handoff, run `python scripts/preflight_dispatch.py --agent <name> --files <list>`. All must exit 0.
+2. Verify the union of all handoff file sets has no duplicates — any duplicate file is a dependency and forces sequential ordering.
+3. Dispatch all `Agent` calls in one message.
+4. After both return, stage, commit, and push as separate commits in dependency order (usually doesn't matter since they don't overlap).
+
+The Agent tool handles concurrent subagents natively — no extra configuration is needed.
+
+### CI watch — background by default
+
+After every `git push`, main session MUST invoke `gh run watch <id> --exit-status` via the Bash tool's `run_in_background: true` parameter, **not** block on it. Main session continues with the next handoff's planning and dispatch while CI runs in parallel. The only *blocking* `gh run watch` is at **sub-phase close**, when all handoffs have landed and the gate check needs every run green before moving to the retrospective.
+
+This trades atomic revert granularity (you discover a red CI one or two handoffs later) for ~2 minutes saved per handoff inside a sub-phase. The trade-off is acceptable because:
+- Pre-commit locally catches the common failures before they reach CI.
+- Main-branch protection still requires green CI before any merge.
+- A red CI reverts one commit, not a whole sub-phase.
+- Sub-phase close runs a final blocking watch across all commits, so nothing ships without full green.
+
+When a background watch reports failure (the task-notification surfaces after completion), main session must immediately investigate and either roll forward with a fix commit or revert the broken commit, before continuing with the next handoff.
+
 ### Known limitation — new subagent registration
 
 Claude Code discovers `.claude/agents/*.md` at **session start**. A new agent file created mid-session is not picked up until the session restarts. If you just created a new agent and `subagent_type` does not list it, invoke it via `general-purpose` for the rest of the current session and it will be directly invokable next session. This is not a bug in the agent file — no amendment to the frontmatter will fix it.

@@ -198,6 +198,28 @@ by `scripts/check_handoff_log.py`):
 
 ---
 
+## 00i — main-session — 2026-04-09
+
+- **Task:** 00i H3 — close Finding F2 (governance-file circular permission) by removing .claude/scope.yaml and .claude/settings.json from devops-agent scope; document parallel dispatch and background CI watch in CLAUDE.md and rulebook.
+- **Scope (files changed):**
+  - .claude/scope.yaml
+  - CLAUDE.md
+  - docs/DEVELOPMENT_RULEBOOK.MD
+  - planning/phase-00-foundation/HANDOFF_LOG.md
+- **Skills invoked:**
+  - `simplify` — PASS (see planning/phase-00-foundation/simplify-receipts/00i-H3-main-session.md)
+- **Rule 3 verification:**
+  - `python scripts/check_handoff_log.py --selftest` → exit 0
+  - `python scripts/preflight_dispatch.py --agent devops-agent --files .claude/scope.yaml` → exit 1 (scope violation — F2 closed, devops can no longer edit the manifest)
+  - `python scripts/preflight_dispatch.py --agent devops-agent --files .claude/settings.json` → exit 1 (scope violation — F2 closed, devops can no longer edit settings.json)
+  - `grep -n "Parallel dispatch for independent handoffs" CLAUDE.md` → line 145
+  - `grep -n "CI watch — background by default" CLAUDE.md` → line 159
+  - `pre-commit run --files .claude/scope.yaml CLAUDE.md docs/DEVELOPMENT_RULEBOOK.MD planning/phase-00-foundation/HANDOFF_LOG.md planning/phase-00-foundation/simplify-receipts/00i-H3-main-session.md` → exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** F2 closed. Governance files (scope.yaml, settings.json, agents/*.md) are now main-session-only per the header comment added to scope.yaml. CLAUDE.md grows two new subsections under "Delegating to subagents": one documents the parallel-dispatch pattern with a worked example from 00h (H1 + H3 would have halved wall-clock); the other documents running `gh run watch` in background (`run_in_background: true`) so orchestration doesn't block on CI between handoffs within a sub-phase. Rulebook B.2 gets one-sentence cross-references to each subsection. H1-fix (cache:pip removal) also landed in this sub-phase before H3 — CI for the earlier H1 commit was red due to the empty-cache post-step bug; H1-fix commit b01b126 resolved it.
+
+---
+
 ## 00f — security-agent — 2026-04-08
 
 - **Task:** Implement backend/app/infrastructure/config/env.py — Pydantic Settings env loader with fail-loudly validation and cached singleton accessor, plus unit tests

@@ -6,6 +6,18 @@
 #
 # Glob syntax: fnmatch patterns relative to repo root.
 # "**" matches any number of path components.
+#
+# GOVERNANCE FILES — main-session-only
+# ====================================
+# The following files grant permissions and therefore must NOT be in any
+# shipping agent's allow list. Only main session can edit them:
+#   - .claude/scope.yaml       (this file; grants permissions)
+#   - .claude/settings.json    (grants tool + hook permissions)
+#   - .claude/agents/*.md      (defines agent capabilities and scope)
+# Finding F2 (00h H1) surfaced a circular-permission bug: devops-agent
+# had .claude/scope.yaml in its allow list and self-amended the manifest
+# to grant itself .claude/agents/** access. 00i H3 closed the loop by
+# removing all governance files from devops-agent scope.
 
 main_session:
   allow:
@@ -14,7 +26,7 @@ main_session:
     - ".claude/**"
     - "docs/**"
     - "HANDOFF_LOG.md"
-  note: "Main session is the orchestrator. All code changes must be delegated to subagents."
+  note: "Main session is the orchestrator. All code changes must be delegated to subagents. Main session exclusively owns the governance files listed in the header comment."
 
 agents:
   frontend-agent:
@@ -86,8 +98,6 @@ agents:
       - "frontend/tsconfig.json"
       - "frontend/package.json"
       - ".gitignore"
-      - ".claude/scope.yaml"
-      - ".claude/settings.json"
       - "planning/**/HANDOFF_LOG.md"
 
   security-agent:

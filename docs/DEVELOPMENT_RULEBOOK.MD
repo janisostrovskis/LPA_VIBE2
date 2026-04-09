@@ -52,6 +52,14 @@ When Agent A needs work done in Agent B's scope:
 4. If FAIL, Agent B documents the blocker and Agent A adjusts its approach.
 5. **No agent may proceed past a gate until all handoffs in that phase are marked COMPLETE with PASS.**
 
+### Parallel dispatch for independent handoffs
+
+When a plan contains handoffs with no file overlap and no ordering dependency, main session MUST dispatch them as multiple `Agent` tool calls in a single message. Sequential dispatch of independent handoffs wastes one full roundtrip per parallelizable pair. See `CLAUDE.md` → "Parallel dispatch for independent handoffs" for the full protocol.
+
+### CI watch runs in the background by default
+
+After `git push`, main session invokes `gh run watch <id> --exit-status` with `run_in_background: true` and continues with the next handoff. The only blocking CI watch is at sub-phase close. See `CLAUDE.md` → "CI watch — background by default" for the trade-off rationale.
+
 ---
 
 ## B.3 Security Review Checklist
