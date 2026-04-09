@@ -93,3 +93,25 @@ Source-touching handoffs dated 2026-04-09 or later must:
 - **Notes:** Dispatched in parallel with 01b H0 (same single-message parallel dispatch). First run was blocked early by scope.yaml missing `planning/**/simplify-receipts/**` in the frontend-agent allow list; second run (after main-session scope patch) completed all deliverables. `frontend/public/fonts/` directory does not exist in the repo so no README/gitkeep deletion was needed. Font loading via `next/font/google` caches downloads after first build; first CI run will fetch Epilogue and Manrope once.
 
 ---
+
+## 01b-H1 — i18n-agent — 2026-04-09
+
+- **Task:** Seed LV/EN/RU translation scaffolding. Create a thin TypeScript i18n loader (`frontend/src/lib/i18n.ts`) and three `common.json` seed files under `frontend/public/locales/{lv,en,ru}/`. Pure content + loader module; no routing, middleware, or React integration (those land in 01b H2).
+- **Scope (files changed):**
+  - frontend/src/lib/i18n.ts (created, 48 lines)
+  - frontend/public/locales/lv/common.json (created, 32 lines, Latvian primary)
+  - frontend/public/locales/en/common.json (created, 32 lines)
+  - frontend/public/locales/ru/common.json (created, 32 lines)
+  - planning/phase-01-design-system/simplify-receipts/01b-H1-i18n-agent.md (created)
+- **Skills invoked:**
+  - `simplify` - PASS
+- **Rule 3 verification:**
+  - `cd frontend && npx tsc --noEmit` -> exit 0 (i18n.ts compiles under strict mode)
+  - JSON validity (python json.load on all three locale files) -> exit 0
+  - Key parity check (flatten-and-compare python script across the three locale files) -> exit 0 (22 keys across 5 namespaces `site`, `nav`, `footer`, `ui`, `languages` identical in all three locales)
+  - `python scripts/check_file_size.py` -> exit 0
+  - `pre-commit run --files frontend/src/lib/i18n.ts frontend/public/locales/lv/common.json frontend/public/locales/en/common.json frontend/public/locales/ru/common.json` -> exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** First LPA commit containing real UTF-8 multi-byte content (Latvian diacritics with macrons/cedillas/carons and Russian Cyrillic). End-to-end validation that the 01b H0 cp1257 hook fix works on real-world content. LV file includes diacritics across site name, nav labels, UI strings, and language names per the i18n-agent report. RU file contains Cyrillic strings for all nav, UI, and language labels. 01b H2 (frontend-agent, next-intl wiring) is now dispatchable -- `i18n.ts` exports `locales`, `defaultLocale`, `Locale` type, and `getMessages(locale)` loader.
+
+---

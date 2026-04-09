@@ -1,0 +1,34 @@
+{
+  "site": {
+    "name": "Latvijas Pilates Asociācija",
+    "tagline": "Profesionāla Pilates kopiena"
+  },
+  "nav": {
+    "home": "Sākums",
+    "about": "Par mums",
+    "join": "Pievienoties",
+    "trainings": "Apmācības",
+    "directory": "Katalogs",
+    "news": "Jaunumi",
+    "resources": "Resursi",
+    "verify": "Verificēt",
+    "contact": "Kontakti"
+  },
+  "footer": {
+    "privacy": "Privātuma politika",
+    "terms": "Lietošanas noteikumi",
+    "cookies": "Sīkdatnes"
+  },
+  "ui": {
+    "loading": "Ielādē...",
+    "error": "Radās kļūda",
+    "closeMenu": "Aizvērt izvēlni",
+    "openMenu": "Atvērt izvēlni",
+    "languageSwitcher": "Valoda"
+  },
+  "languages": {
+    "lv": "Latviešu",
+    "en": "Angļu",
+    "ru": "Krievu"
+  }
+}

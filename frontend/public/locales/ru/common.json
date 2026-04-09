@@ -1,0 +1,34 @@
+{
+  "site": {
+    "name": "Latvijas Pilates Asociācija",
+    "tagline": "Латвийская ассоциация пилатеса"
+  },
+  "nav": {
+    "home": "Главная",
+    "about": "О нас",
+    "join": "Вступить",
+    "trainings": "Обучение",
+    "directory": "Каталог",
+    "news": "Новости",
+    "resources": "Ресурсы",
+    "verify": "Проверить",
+    "contact": "Контакты"
+  },
+  "footer": {
+    "privacy": "Политика конфиденциальности",
+    "terms": "Условия использования",
+    "cookies": "Файлы cookie"
+  },
+  "ui": {
+    "loading": "Загрузка...",
+    "error": "Произошла ошибка",
+    "closeMenu": "Закрыть меню",
+    "openMenu": "Открыть меню",
+    "languageSwitcher": "Язык"
+  },
+  "languages": {
+    "lv": "Латышский",
+    "en": "Английский",
+    "ru": "Русский"
+  }
+}
