@@ -1,1 +1,5 @@
 iso_timestamp,phase,handoff,event,ref,run_id,notes
+2026-04-09T07:44:51.137049+00:00,00g,H1,dispatch-start,,,
+2026-04-09T07:44:51.255530+00:00,00g,H2,dispatch-start,,,
+2026-04-09T07:50:30.395932+00:00,00g,H1,dispatch-end,,,
+2026-04-09T07:50:30.519319+00:00,00g,H2,dispatch-end,,,

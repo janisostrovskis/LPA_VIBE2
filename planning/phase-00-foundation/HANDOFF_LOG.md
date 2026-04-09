@@ -258,6 +258,60 @@ by `scripts/check_handoff_log.py`):
 - **Result:** HANDOFF COMPLETE — PASS
 - **Notes:** F2 closed. Governance files (scope.yaml, settings.json, agents/*.md) are now main-session-only per the header comment added to scope.yaml. CLAUDE.md grows two new subsections under "Delegating to subagents": one documents the parallel-dispatch pattern with a worked example from 00h (H1 + H3 would have halved wall-clock); the other documents running `gh run watch` in background (`run_in_background: true`) so orchestration doesn't block on CI between handoffs within a sub-phase. Rulebook B.2 gets one-sentence cross-references to each subsection. H1-fix (cache:pip removal) also landed in this sub-phase before H3 — CI for the earlier H1 commit was red due to the empty-cache post-step bug; H1-fix commit b01b126 resolved it.
 
+## 00g — database-agent — 2026-04-09
+
+- **Task:** 00g H1 — COLA folder tree scaffold (database-agent half). Create 7 new `__init__.py` stubs. Dispatched in parallel with H2 per 00i rule.
+- **Scope (files changed):**
+  - backend/app/domain/entities/__init__.py
+  - backend/app/domain/value_objects/__init__.py
+  - backend/app/infrastructure/database/__init__.py
+  - backend/tests/domain/__init__.py
+  - backend/tests/domain/entities/__init__.py
+  - backend/tests/domain/value_objects/__init__.py
+  - backend/tests/infrastructure/database/__init__.py
+- **Skills invoked:**
+  - `simplify` — waived — one-line docstring stubs only; no logic, no imports, nothing to simplify
+- **Rule 3 verification:**
+  - `python scripts/check_cola_imports.py` → exit 0
+  - `python scripts/check_file_size.py` → exit 0
+  - `pre-commit run --files backend/app/domain/entities/__init__.py backend/app/domain/value_objects/__init__.py backend/app/infrastructure/database/__init__.py backend/tests/domain/__init__.py backend/tests/domain/entities/__init__.py backend/tests/domain/value_objects/__init__.py backend/tests/infrastructure/database/__init__.py` → exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** `backend/app/domain/__init__.py` is intentionally NOT created — it's a PEP 420 namespace package. Neither backend-agent nor database-agent owns it in scope.yaml (gap: `domain/rules/**` and `domain/entities/**` match only children). Skipping avoids a one-file scope.yaml amendment. Python 3 handles namespace packages natively; subpackages with their own `__init__.py` import fine.
+
+## 00g — backend-agent — 2026-04-09
+
+- **Task:** 00g H2 — COLA folder tree scaffold (backend-agent half). Create 21 new `__init__.py` stubs. Dispatched in parallel with H1 per 00i rule.
+- **Scope (files changed):**
+  - backend/app/domain/rules/__init__.py
+  - backend/app/domain/events/__init__.py
+  - backend/app/domain/errors/__init__.py
+  - backend/app/application/__init__.py
+  - backend/app/application/use_cases/__init__.py
+  - backend/app/application/services/__init__.py
+  - backend/app/application/ports/__init__.py
+  - backend/app/application/dto/__init__.py
+  - backend/app/api/__init__.py
+  - backend/app/api/routes/__init__.py
+  - backend/app/api/middleware/__init__.py
+  - backend/app/api/schemas/__init__.py
+  - backend/tests/application/__init__.py
+  - backend/tests/application/use_cases/__init__.py
+  - backend/tests/application/services/__init__.py
+  - backend/tests/application/ports/__init__.py
+  - backend/tests/application/dto/__init__.py
+  - backend/tests/api/__init__.py
+  - backend/tests/api/routes/__init__.py
+  - backend/tests/api/middleware/__init__.py
+  - backend/tests/api/schemas/__init__.py
+- **Skills invoked:**
+  - `simplify` — waived — one-line docstring stubs only; no logic, no imports, nothing to simplify
+- **Rule 3 verification:**
+  - `python scripts/check_cola_imports.py` → exit 0
+  - `python scripts/check_file_size.py` → exit 0
+  - `pre-commit run --files <all 21 H2 paths>` → exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** Second half of the first-ever parallel-dispatch sub-phase. Ran concurrently with H1 in a single main-session message. No file overlap with H1. `backend/app/api/middleware/__init__.py` is shared scope between backend-agent (`app/api/**`) and security-agent (`app/api/middleware/**`) — backend-agent took it here without issue. `backend/app/domain/__init__.py` intentionally skipped (see H1 notes).
+
 ---
 
 ## 00f — security-agent — 2026-04-08
