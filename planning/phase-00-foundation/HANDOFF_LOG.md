@@ -156,6 +156,27 @@ by `scripts/check_handoff_log.py`):
 
 ## 00i — devops-agent — 2026-04-09
 
+- **Task:** 00i H1-fix — remove cache: pip from non-pip-installing CI jobs
+- **Scope (files changed):**
+  - .github/workflows/ci.yml
+  - planning/phase-00-foundation/HANDOFF_LOG.md
+- **Skills invoked:**
+  - `simplify` — PASS
+- **Rule 3 verification:**
+  - `grep -c "cache: pip" .github/workflows/ci.yml` → 6
+  - `awk '/^  cola-check:/,/^  [a-z]/' .github/workflows/ci.yml | grep -c "cache: pip"` → 0
+  - `awk '/^  filesize-check:/,/^  [a-z]/' .github/workflows/ci.yml | grep -c "cache: pip"` → 0
+  - `awk '/^  handoff-hygiene:/,/^  [a-z]/' .github/workflows/ci.yml | grep -c "cache: pip"` → 0
+  - `python -c "import yaml; yaml.safe_load(open('.github/workflows/ci.yml'))"` → exit 0
+  - `python scripts/check_handoff_log.py --selftest` → exit 0
+  - `pre-commit run --files .github/workflows/ci.yml planning/phase-00-foundation/HANDOFF_LOG.md` → exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** H1's CI run 24177188399 failed because setup-python@v5's post-step tried to save ~/.cache/pip for three jobs that never ran pip install, causing "Cache folder path is retrieved for pip but doesn't exist on disk". Dropped `cache: pip` and `cache-dependency-path` from cola-check, filesize-check, and handoff-hygiene only; all six remaining setup-python blocks (lint, typecheck, unit-tests, integration-tests, e2e, security) retain pip caching because they all run `pip install -e .[dev]`.
+
+---
+
+## 00i — devops-agent — 2026-04-09
+
 - **Task:** 00i H2 — PostToolUse Bash scope guard to close Finding F3 (Bash tool bypasses Write|Edit PreToolUse scope guard)
 - **Scope (files changed):**
   - scripts/hooks/pretool_bash_baseline.py
