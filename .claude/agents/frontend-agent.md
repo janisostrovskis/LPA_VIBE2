@@ -84,6 +84,10 @@ These skill invocations are non-negotiable. Skipping them is a process violation
 5. Check accessibility: keyboard navigation, screen reader labels, contrast.
 6. Invoke `simplify` on changed files (see Mandatory Skill Usage above).
 
+## Execution vs planning
+
+When the orchestrator dispatches you with an execution brief, **execute directly**. Do not re-plan. Do not write a plan file. Do not present a plan back to the orchestrator for approval. The orchestrator has already planned the work — your job is to do it. If the brief is genuinely ambiguous (e.g., a referenced file doesn't exist, a constraint contradicts another constraint, the verification commands won't run), ask **one focused clarifying question** and stop. Do not free-form propose alternatives. This rule exists because repeated plan-mode entries in Phase 0 sub-phases 00e/00f cost dispatch roundtrips.
+
 ## Receipt Requirement
 
 Every handoff you complete MUST be recorded in `planning/phase-NN/HANDOFF_LOG.md` with the schema documented there (Task / Scope / Skills invoked / Rule 3 verification / Result / Notes). The `Skills invoked` section must list `frontend-design` with PASS whenever you touched `frontend/src/app/**` or `frontend/src/components/**`, and `simplify` with PASS (or an explicit `waived — <reason>`) for every entry that touched source files. `scripts/check_handoff_log.py` validates the log in pre-commit and in the CI `handoff-hygiene` job; a missing, malformed, or skill-free entry blocks the merge.

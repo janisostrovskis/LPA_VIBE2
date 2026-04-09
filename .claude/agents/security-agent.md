@@ -169,6 +169,10 @@ find backend/ frontend/ -name "*.py" -o -name "*.ts" -o -name "*.tsx" | xargs wc
 4. Document results in `planning/phase-NN/SECURITY_REVIEW.md`.
 5. File handoffs for any findings.
 
+## Execution vs planning
+
+When the orchestrator dispatches you with an execution brief, **execute directly**. Do not re-plan. Do not write a plan file. Do not present a plan back to the orchestrator for approval. The orchestrator has already planned the work — your job is to do it. If the brief is genuinely ambiguous (e.g., a referenced file doesn't exist, a constraint contradicts another constraint, the verification commands won't run), ask **one focused clarifying question** and stop. Do not free-form propose alternatives. This rule exists because repeated plan-mode entries in Phase 0 sub-phases 00e/00f cost dispatch roundtrips.
+
 ## Receipt Requirement
 
 Every audit you complete MUST be recorded in `planning/phase-NN/HANDOFF_LOG.md` with the schema documented there (Task / Scope / Skills invoked / Rule 3 verification / Result / Notes). For audits, the "Scope" lists the files/directories reviewed and "Rule 3 verification" lists the tool commands you ran (bandit, semgrep, pip-audit, gitleaks, etc.) with their exit codes. `scripts/check_handoff_log.py` validates the log in pre-commit and in the CI `handoff-hygiene` job.

@@ -144,6 +144,10 @@ Before editing `.claude/settings.json`, hooks configuration, or any Claude Code 
 3. If touching `.claude/settings.json` or hooks, invoke `update-config` (see Mandatory Skill Usage above).
 4. After changes, verify: `docker compose up --build` succeeds, all hooks work, CI pipeline passes.
 
+## Execution vs planning
+
+When the orchestrator dispatches you with an execution brief, **execute directly**. Do not re-plan. Do not write a plan file. Do not present a plan back to the orchestrator for approval. The orchestrator has already planned the work — your job is to do it. If the brief is genuinely ambiguous (e.g., a referenced file doesn't exist, a constraint contradicts another constraint, the verification commands won't run), ask **one focused clarifying question** and stop. Do not free-form propose alternatives. This rule exists because repeated plan-mode entries in Phase 0 sub-phases 00e/00f cost dispatch roundtrips.
+
 ## Receipt Requirement
 
 Every handoff you complete MUST be recorded in `planning/phase-NN/HANDOFF_LOG.md` with the schema documented there (Task / Scope / Skills invoked / Rule 3 verification / Result / Notes). `scripts/check_handoff_log.py` validates the log in pre-commit and in the CI `handoff-hygiene` job. A missing, malformed, or skill-free entry blocks the merge. Record PASS/FAIL and every command you ran with its exit code — this is the only evidence that your work was verified.

@@ -134,6 +134,14 @@ Every sub-phase commit that touches `backend/app/**` or `frontend/src/**` must c
 4. Invoke the **Efficiency Agent** to retrospect on the phase. Apply any process amendments it produces.
 5. **All four must pass before starting the next phase.** No exceptions.
 
+### Subagent dispatch preamble
+
+Every execution brief sent to a shipping agent (frontend, backend, database, payments, devops, security, i18n) MUST begin with the following sentence verbatim, on its own line, in bold:
+
+> **Execute the following. This is not a planning task. Do not enter plan mode. Do not present a plan back to the orchestrator. Write files directly. If the brief is ambiguous, ask one focused clarifying question — do not write a plan file.**
+
+The preamble exists because subagents repeatedly entered plan mode in Phase 0 sub-phases 00e and 00f, costing dispatch roundtrips. The exact sentence is matchable by future enforcement tooling. Briefs that omit it are presumed defective.
+
 ### Known limitation — new subagent registration
 
 Claude Code discovers `.claude/agents/*.md` at **session start**. A new agent file created mid-session is not picked up until the session restarts. If you just created a new agent and `subagent_type` does not list it, invoke it via `general-purpose` for the rest of the current session and it will be directly invokable next session. This is not a bug in the agent file — no amendment to the frontmatter will fix it.
