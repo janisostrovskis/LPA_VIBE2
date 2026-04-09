@@ -198,6 +198,46 @@ by `scripts/check_handoff_log.py`):
 
 ---
 
+## 00i — devops-agent — 2026-04-09
+
+- **Task:** 00i H4a — create scripts/log_handoff_timing.py (handoff timing instrumentation, stdlib only)
+- **Scope (files changed):**
+  - scripts/log_handoff_timing.py
+  - planning/phase-00-foundation/HANDOFF_LOG.md
+- **Skills invoked:**
+  - `simplify` — PASS (see planning/phase-00-foundation/simplify-receipts/00i-H4a-devops-agent.md — artifact created by main session before commit per devops scope rules)
+  - `update-config` — N/A (no settings.json edit)
+- **Rule 3 verification:**
+  - `python scripts/log_handoff_timing.py --selftest` → exit 0
+  - `python scripts/log_handoff_timing.py record --phase testme --handoff HX --event bogus` → exit 2
+  - `python scripts/log_handoff_timing.py summary --phase nonexistent` → exit 0 (prints "no data" message)
+  - `python scripts/check_handoff_log.py --selftest` → exit 0
+  - `pre-commit run --files scripts/log_handoff_timing.py planning/phase-00-foundation/HANDOFF_LOG.md` → exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** This is H4a (devops half). The CLAUDE.md instrumentation wiring (record calls at dispatch-start/dispatch-end/commit/ci-* events) and the CSV seed row for phase 00i are H4b, owned by main session (CLAUDE.md and planning/** are in main-session scope). The simplify receipt artifact will be created by main session at planning/phase-00-foundation/simplify-receipts/00i-H4a-devops-agent.md before the final commit. The script is stdlib-only (argparse, csv, datetime, pathlib, sys, tempfile for selftest). Phase-directory resolution: defaults to planning/phase-00-foundation; override with --phase-dir when Phase 1 starts (documented as a forward-only limitation in the module docstring, not a TODO).
+
+---
+
+## 00i — main-session — 2026-04-09
+
+- **Task:** 00i H4b — wire log_handoff_timing.py into CLAUDE.md delegation workflow and seed handoff-timings.csv
+- **Scope (files changed):**
+  - CLAUDE.md
+  - planning/phase-00-foundation/handoff-timings.csv
+  - planning/phase-00-foundation/simplify-receipts/00i-H4a-devops-agent.md
+  - planning/phase-00-foundation/HANDOFF_LOG.md
+- **Skills invoked:**
+  - `simplify` — PASS (receipt for H4a covers the script; this entry's delta is CLAUDE.md prose + an empty CSV, both trivial)
+- **Rule 3 verification:**
+  - `python scripts/log_handoff_timing.py --selftest` → exit 0
+  - `grep -n "Handoff timing instrumentation" CLAUDE.md` → match
+  - `head -1 planning/phase-00-foundation/handoff-timings.csv` → `iso_timestamp,phase,handoff,event,ref,run_id,notes`
+  - `pre-commit run --files CLAUDE.md planning/phase-00-foundation/handoff-timings.csv planning/phase-00-foundation/simplify-receipts/00i-H4a-devops-agent.md planning/phase-00-foundation/HANDOFF_LOG.md` → exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** Completes sub-phase 00i. Timing instrumentation is forward-only from 00i — no retroactive data for 00a-00h. The four-event protocol (dispatch-start → dispatch-end → commit → ci-green/ci-red) is documented in CLAUDE.md under "Delegating to subagents" alongside the parallel-dispatch and background-CI-watch subsections from H3. Sub-phase close will run `summary --phase 00i` — but note that 00i itself was executed before these instructions were in place, so the CSV will be seeded empty and Phase 1 will be the first sub-phase with full timing coverage.
+
+---
+
 ## 00i — main-session — 2026-04-09
 
 - **Task:** 00i H3 — close Finding F2 (governance-file circular permission) by removing .claude/scope.yaml and .claude/settings.json from devops-agent scope; document parallel dispatch and background CI watch in CLAUDE.md and rulebook.

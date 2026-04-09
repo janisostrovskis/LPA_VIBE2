@@ -168,6 +168,30 @@ This trades atomic revert granularity (you discover a red CI one or two handoffs
 
 When a background watch reports failure (the task-notification surfaces after completion), main session must immediately investigate and either roll forward with a fix commit or revert the broken commit, before continuing with the next handoff.
 
+### Handoff timing instrumentation
+
+Every handoff inside a sub-phase MUST be timed. Main session invokes `scripts/log_handoff_timing.py` at four moments per handoff:
+
+```bash
+python scripts/log_handoff_timing.py record --phase <NN-letter> --handoff <H#> --event dispatch-start
+# ...Agent call...
+python scripts/log_handoff_timing.py record --phase <NN-letter> --handoff <H#> --event dispatch-end
+# ...stage + commit + push...
+python scripts/log_handoff_timing.py record --phase <NN-letter> --handoff <H#> --event commit --ref <sha>
+# ...after gh run watch returns...
+python scripts/log_handoff_timing.py record --phase <NN-letter> --handoff <H#> --event ci-green --run-id <id>
+# or on red:
+python scripts/log_handoff_timing.py record --phase <NN-letter> --handoff <H#> --event ci-red --run-id <id> --notes "brief cause"
+```
+
+Events accumulate in `planning/phase-00-foundation/handoff-timings.csv` (Phase 0) or the equivalent phase directory in later phases. At sub-phase close, main session runs:
+
+```bash
+python scripts/log_handoff_timing.py summary --phase <NN-letter>
+```
+
+and includes the resulting table in the sub-phase retrospective. This replaces "feels slow" prose with real numbers. Instrumentation is forward-only from 00i — earlier sub-phases (00a–00h) have no timing data.
+
 ### Known limitation — new subagent registration
 
 Claude Code discovers `.claude/agents/*.md` at **session start**. A new agent file created mid-session is not picked up until the session restarts. If you just created a new agent and `subagent_type` does not list it, invoke it via `general-purpose` for the rest of the current session and it will be directly invokable next session. This is not a bug in the agent file — no amendment to the frontmatter will fix it.
