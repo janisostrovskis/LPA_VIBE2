@@ -128,6 +128,32 @@ by `scripts/check_handoff_log.py`):
 
 ---
 
+## 00i — devops-agent — 2026-04-09
+
+- **Task:** 00i H1 — CI speed wins (pip cache + Playwright cache + nightly security split)
+- **Scope (files changed):**
+  - .github/workflows/ci.yml
+  - .github/workflows/nightly-security.yml
+  - planning/phase-00-foundation/HANDOFF_LOG.md
+- **Skills invoked:**
+  - `cola-compliance` — N/A (CI config only)
+  - `fail-loudly` — PASS (nightly job opens GitHub issue on failure via actions/github-script)
+  - `phase-gate` — deferred to sub-phase close
+  - `simplify` — PASS (see planning/phase-00-foundation/simplify-receipts/00i-H1-devops-agent.md)
+- **Rule 3 verification:**
+  - `python scripts/check_handoff_log.py --selftest` → exit 0
+  - `python -c "import yaml; yaml.safe_load(open('.github/workflows/ci.yml')); yaml.safe_load(open('.github/workflows/nightly-security.yml'))"` → exit 0
+  - `grep -c "cache: pip" .github/workflows/ci.yml` → 9 (≥ 5)
+  - `grep -n "log-opts=\"--all\"" .github/workflows/ci.yml` → empty (exit 1, no matches)
+  - `grep -n "log-opts=\"--all\"" .github/workflows/nightly-security.yml` → line 43, exit 0
+  - `grep -n "pip-audit" .github/workflows/ci.yml` → empty (exit 1, no matches)
+  - `grep -n "pip-audit" .github/workflows/nightly-security.yml` → lines 45,47,54,69 (exit 0)
+  - `pre-commit run --files .github/workflows/ci.yml .github/workflows/nightly-security.yml` → exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** Baseline wall-clock: 2m 02s (run 24175444250, H3 of 00h). Expected saving: pip cache ~20s/job across 9 setup-python blocks, Playwright cache ~40–60s off E2E critical path. Nightly workflow includes `workflow_dispatch:` — triggerable manually for post-handoff verification. Target post-cache wall-clock: < 1m 30s. The `gitleaks (full history)` and `pip-audit` steps were deleted from the per-push security job; both now live exclusively in nightly-security.yml with identical `--ignore-vuln` flags and TODO comments copied verbatim.
+
+---
+
 ## 00f — security-agent — 2026-04-08
 
 - **Task:** Implement backend/app/infrastructure/config/env.py — Pydantic Settings env loader with fail-loudly validation and cached singleton accessor, plus unit tests
