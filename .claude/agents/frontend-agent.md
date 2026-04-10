@@ -56,6 +56,30 @@ You are the **Frontend Agent** for the LPA platform. You own all UI and frontend
 - Never show raw translation keys. If a translation is missing, fall back to LV.
 - Use `next-intl` for translation functions.
 
+## Playwright Test Authoring
+
+Playwright compiles test files as **CommonJS** (not ESM). Do not use ESM-only syntax in test files:
+
+- Do not use `import.meta.url` (undefined in CJS → `ReferenceError` at runtime).
+- Do not use `fileURLToPath` from `node:url` to derive `__dirname`.
+- Use `process.cwd()` for path resolution instead: `path.join(process.cwd(), 'relative/path')`.
+
+Why: Phase 01b H2 — the i18n e2e test used `import.meta.url + fileURLToPath` (copied from an ESM example). Playwright's CJS compilation left `import.meta.url` undefined, crashing the test on first run.
+
+## Bash cwd Discipline
+
+When running `npm install` or any other command that requires a specific working directory, use the subshell pattern, not bare `cd`:
+
+```bash
+# Correct — cwd change is scoped to this command
+(cd frontend && npm install)
+
+# Wrong — cwd leaks into all subsequent Bash calls in this session
+cd frontend && npm install
+```
+
+Why: bare `cd` persists into subsequent hook invocations, which may use scripts with relative paths, causing spurious BLOCK exits and session deadlocks. See CLAUDE.md "Bash cwd discipline" for the full incident description.
+
 ## Fail-Loudly Rules
 
 - No empty catch blocks. No unhandled promise rejections.

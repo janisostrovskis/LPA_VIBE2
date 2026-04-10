@@ -119,6 +119,14 @@ Every handoff must be recorded in `planning/phase-NN/HANDOFF_LOG.md` with the sc
 
 Every sub-phase commit that touches `backend/app/**` or `frontend/src/**` must carry a `Simplify:` decision in the commit body: `Simplify: ran, clean` / `Simplify: ran, <N> findings addressed ...` / `Simplify: waived — <reason>`. The `scripts/hooks/commit_msg_simplify_gate.py` commit-msg hook rejects commits that don't. `git commit --no-verify` is denied by `.claude/settings.json` — do not attempt to bypass.
 
+### Bash cwd discipline
+
+The Bash tool cwd persists between calls within a session. Never use bare `cd subdir && cmd` in agent or orchestrator Bash calls — the cwd change leaks into all subsequent calls, which can break hook invocations, relative-path scripts, and other tools.
+
+**Required pattern:** use a subshell: `(cd frontend && npm install)`. This scopes the directory change to one command and leaves the session cwd unchanged.
+
+Why: Phase 01b H2 used bare `cd frontend && npm install`. A later hook invoked `scripts/hooks/pretool_scope_guard.py` as a relative path, which resolved to `frontend/scripts/hooks/...` (non-existent). Python exit code 2 is treated as BLOCK by Claude Code, deadlocking all Bash/Write/Edit calls for the entire session. Two full Claude Code restarts were required to recover. Hook paths are now absolute (`${CLAUDE_PROJECT_DIR}/scripts/hooks/...`), but the subshell discipline eliminates the class of bug entirely.
+
 ### While writing code
 
 - **Fail loudly.** Never swallow errors. No bare `except:` or `except Exception: pass` in Python. No empty catch blocks in TypeScript. No unhandled promise rejections. If something fails, surface it. The only exception: items documented with `# FAIL-QUIET-EXCEPTION:` comment, including rationale, logged at WARNING level minimum, and approved in the phase plan document.
@@ -230,6 +238,8 @@ The Efficiency Agent is **not** invoked for one-off mistakes or transient failur
 - URLs use `[locale]` prefix: `/lv/apmacibas`, `/en/trainings`, `/ru/treningi`.
 - Backend emails respect the user's `preferred_language` field.
 - If a translation is missing, fall back to LV. Never show a blank string or raw translation key to the user.
+- **next-intl locale detection must be disabled.** Set `localeDetection: false` in the `createMiddleware` config. Without this, next-intl uses the browser Accept-Language header and redirects to the browser-preferred locale instead of the LPA default (LV). Why: Phase 01b H2 omitted this flag; CI browsers defaulted to EN, causing root-redirect tests to fail.
+- **Edge Runtime import constraint.** `middleware.ts` and any module it (transitively) imports must use **only Web APIs** — no `node:*` imports (`node:fs`, `node:path`, `node:crypto`, etc.). Next.js middleware runs on Edge Runtime, which does not support Node.js built-ins. If a helper module is used by both middleware and server components, split it: keep a pure-Web-API version importable from middleware, and a separate server-only version for Node.js contexts. Why: Phase 01b H2 i18n.ts exported a `getMessages` function using `node:fs/promises`; when middleware imported locales from that same file, webpack threw `UnhandledSchemeError` and the build failed.
 
 ## Payment Integration
 

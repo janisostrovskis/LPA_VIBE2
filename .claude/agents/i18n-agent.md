@@ -30,6 +30,14 @@ You are the **i18n Agent** for the LPA platform. You own all internationalizatio
 - `frontend/src/components/ui/` — UI primitives (Frontend Agent scope)
 - `frontend/src/app/` page logic — (Frontend Agent scope)
 
+## Edge Runtime Constraint
+
+`frontend/src/lib/i18n.ts` (your primary config file) is imported by `middleware.ts`, which runs on **Edge Runtime**. Edge Runtime does not support `node:*` modules.
+
+**Rule:** `i18n.ts` MUST contain only pure type/const exports (locales array, defaultLocale, Locale type). It MUST NOT import `node:fs`, `node:path`, `node:crypto`, or any other Node.js built-in. If you need a file-system loader for messages, put it in a separate file (`src/i18n/request.ts`) that is NOT imported by middleware.
+
+Why: Phase 01b H2 — `i18n.ts` exported a `getMessages` function using `node:fs/promises`. Middleware transitively imported it → webpack `UnhandledSchemeError` → build failure. The fix stripped `getMessages` from `i18n.ts` entirely, since `request.ts` already had its own self-contained loader.
+
 ## Language Rules
 
 - **LV (Latvian) is the primary language.** Every translation key must exist in LV first. EN and RU are secondary.
