@@ -146,3 +146,56 @@ Source-touching handoffs dated 2026-04-09 or later must:
 - **Notes:** Closes Phase 01 sub-phase 01b. Extensive friction during this handoff: at least four frontend-agent dispatches required to land the code, plus main-session recovery for three scope-overridden fixes (`i18n.ts` edge-runtime bug, `middleware.ts` `localeDetection: false`, `tests/e2e/i18n.spec.ts` ESM-to-CJS pattern). Root-cause friction included a Bash-cwd deadlock that caused hook paths to become unresolvable and required two Claude Code session restarts; fixed permanently by rewriting the three hook commands in `.claude/settings.json` to use `${CLAUDE_PROJECT_DIR}`. Efficiency retrospective warranted at 01b close to harvest the lessons into CLAUDE.md (subshell `cd` pattern, `simplify-receipts/**` scope addition, hook path hardening).
 
 ---
+
+## 01c-H1 — frontend-agent — 2026-04-10
+
+- **Task:** Create Button, Card, and Badge UI primitives with unit tests per `docs/LPA_DESIGN_LANGUAGE.MD` v2.0 Sections 5.1, 4.2, and 5.5. All components use v2.0 Tailwind tokens exclusively, have focus-visible states, and export typed props.
+- **Scope (files changed):**
+  - frontend/src/components/ui/Button.tsx (created, ~90 lines; primary gradient + secondary + text variants, 3 sizes, loading/disabled states)
+  - frontend/src/components/ui/Card.tsx (created, ~40 lines; base + feature variants, optional hover lift)
+  - frontend/src/components/ui/Badge.tsx (created, ~40 lines; primary/secondary/tertiary/outline variants, pill chip style)
+  - frontend/src/components/ui/__tests__/Button.test.tsx (created, 11 tests)
+  - frontend/src/components/ui/__tests__/Card.test.tsx (created, 5 tests)
+  - frontend/src/components/ui/__tests__/Badge.test.tsx (created, 6 tests)
+  - frontend/package.json (added @testing-library/react, @testing-library/jest-dom, @testing-library/user-event, @vitejs/plugin-react)
+  - frontend/vitest.config.ts (added react plugin for JSX transform in tests)
+  - frontend/package-lock.json (regenerated via Node 20 Docker for CI parity)
+- **Skills invoked:**
+  - `frontend-design` - PASS
+  - `simplify` - waived - new component files following design system spec verbatim
+- **Rule 3 verification:**
+  - `(cd frontend && npx vitest run)` -> exit 0 (43 tests, 7 files, all pass)
+  - `(cd frontend && npm run build)` -> exit 0
+  - `(cd frontend && npx playwright test)` -> exit 0 (5 tests pass)
+  - `python scripts/check_file_size.py` -> exit 0
+  - `pre-commit run --files <all changed>` -> exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** Dispatched in parallel with 01c H2 (first same-agent-type parallel dispatch in repo history). Added @testing-library/react + @vitejs/plugin-react as test infrastructure -- required for component test rendering. Lockfile regenerated with Node 20 Docker to prevent CI npm ci mismatch.
+
+---
+
+## 01c-H2 — frontend-agent — 2026-04-10
+
+- **Task:** Create Input, Modal, and Toast UI primitives with unit tests per `docs/LPA_DESIGN_LANGUAGE.MD` v2.0 Sections 5.2, 5.4, and 5.5. All components use v2.0 Tailwind tokens, have ARIA attributes, and export typed props.
+- **Scope (files changed):**
+  - frontend/src/components/ui/Input.tsx (created, ~80 lines; underline + filled variants, label/hint/error props, aria-describedby + aria-invalid)
+  - frontend/src/components/ui/Modal.tsx (created, ~100 lines; portal, glassmorphism overlay, hand-rolled focus trap, ESC + click-outside close, role="dialog" aria-modal="true")
+  - frontend/src/components/ui/Toast.tsx (created, ~70 lines; glassmorphism pill, success/error/info variants, auto-dismiss timer, role="status"/role="alert")
+  - frontend/src/components/ui/__tests__/Input.test.tsx (created, 7 tests)
+  - frontend/src/components/ui/__tests__/Modal.test.tsx (created, 6 tests)
+  - frontend/src/components/ui/__tests__/Toast.test.tsx (created, 7 tests)
+  - planning/phase-01-design-system/simplify-receipts/01c-H1-frontend-agent.md (created)
+  - planning/phase-01-design-system/simplify-receipts/01c-H2-frontend-agent.md (created)
+- **Skills invoked:**
+  - `frontend-design` - PASS
+  - `simplify` - waived - new component files following design system spec verbatim
+- **Rule 3 verification:**
+  - `(cd frontend && npx vitest run)` -> exit 0 (43 tests, 7 files, all pass)
+  - `(cd frontend && npm run build)` -> exit 0 (after two main-session scope-override fixes for noUncheckedIndexedAccess TS errors in Modal.tsx focus trap)
+  - `(cd frontend && npx playwright test)` -> exit 0 (5 tests pass)
+  - `python scripts/check_file_size.py` -> exit 0
+  - `pre-commit run --files <all changed>` -> exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** Modal uses hand-rolled focus trap (no Radix dependency). Two `noUncheckedIndexedAccess` TypeScript strict errors in the focus trap were fixed by main session via scope-overrides (focusable[0] and focusable[length-1] possibly undefined with strict indexed access). Toast uses glassmorphism via backdrop-blur-nav + surface-container-highest/80 opacity. All three components portal-free except Modal (portals to document.body).
+
+---
