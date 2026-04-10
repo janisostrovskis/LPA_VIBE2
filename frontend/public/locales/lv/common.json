@@ -30,5 +30,56 @@
     "lv": "Latviešu",
     "en": "Angļu",
     "ru": "Krievu"
+  },
+  "pages": {
+    "home": {
+      "title": "Latvijas Pilates Asociācija",
+      "subtitle": "Vienojam Pilates profesionāļus visā Latvijā. Attīsti savu karjeru ar mūsu sertifikāciju un apmācībām.",
+      "cta": "Pievienoties"
+    },
+    "about": {
+      "title": "Par mums",
+      "subtitle": "Uzzini par Latvijas Pilates Asociācijas misiju, vērtībām un komandu."
+    },
+    "join": {
+      "title": "Pievienoties LPA",
+      "subtitle": "Kļūsti par LPA biedru un iegūsti piekļuvi ekskluzīviem resursiem, apmācībām un profesionālajam tīklam."
+    },
+    "trainings": {
+      "title": "Apmācības",
+      "subtitle": "Atrod un reģistrējies Pilates apmācībās un semināros visā Latvijā."
+    },
+    "directory": {
+      "title": "Instruktoru un studiju katalogs",
+      "subtitle": "Atrod LPA verificētus Pilates instruktorus un studijas tuvumā."
+    },
+    "news": {
+      "title": "Jaunumi",
+      "subtitle": "Sekojiet līdzi jaunākajiem LPA notikumiem, rakstiem un paziņojumiem."
+    },
+    "resources": {
+      "title": "Resursi",
+      "subtitle": "Materiāli un dokumenti LPA biedriem — metodiskie materiāli, veidlapas un ceļveži."
+    },
+    "verify": {
+      "title": "Verificēt sertifikātu",
+      "subtitle": "Pārbaudi LPA izdotā sertifikāta autentiskumu, ievadot sertifikāta numuru."
+    },
+    "contact": {
+      "title": "Kontakti",
+      "subtitle": "Sazinies ar LPA komandu. Mēs atbildēsim pēc iespējas ātrāk."
+    },
+    "privacy": {
+      "title": "Privātuma politika",
+      "subtitle": "TODO: replace with real content"
+    },
+    "terms": {
+      "title": "Lietošanas noteikumi",
+      "subtitle": "TODO: replace with real content"
+    },
+    "cookies": {
+      "title": "Sīkdatņu politika",
+      "subtitle": "TODO: replace with real content"
+    }
   }
 }

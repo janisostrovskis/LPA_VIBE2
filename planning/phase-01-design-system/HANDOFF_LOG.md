@@ -229,3 +229,55 @@ Source-touching handoffs dated 2026-04-09 or later must:
 - **Notes:** Single-handoff dispatch (H1 only). Agent ran out of context while fixing jest-dom matcher issues in tests; main session completed the fix via 6 scope-overrides replacing `toBeInTheDocument()` and `toHaveAttribute()` with vanilla vitest equivalents (`toBeTruthy()`, `getAttribute()`). This is the same jest-dom pattern issue from 01c -- should add `@testing-library/jest-dom` setup file or document the vanilla-assertion-only convention to prevent recurrence. Icons in BottomDock use placeholder Unicode/text since Lucide is not yet installed. LanguageSwitcher uses `router.push` for locale switching via pathname rewriting.
 
 ---
+
+## 01e-H1 — i18n-agent — 2026-04-10
+
+- **Task:** Extend `common.json` locale files with ~23 new page content keys for 12 public routes under a `pages` top-level namespace (home, about, join, trainings, directory, news, resources, verify, contact, privacy, terms, cookies). Each page gets `title` and `subtitle` keys; home also gets `cta`.
+- **Scope (files changed):**
+  - frontend/public/locales/lv/common.json (modified, +23 keys under `pages`)
+  - frontend/public/locales/en/common.json (modified, +23 keys)
+  - frontend/public/locales/ru/common.json (modified, +23 keys)
+  - planning/phase-01-design-system/simplify-receipts/01e-H1-i18n-agent.md (created)
+- **Skills invoked:**
+  - `simplify` - waived - translation content only, no logic
+- **Rule 3 verification:**
+  - JSON validity (json.load all three files) -> exit 0
+  - Key parity check (flatten-and-compare) -> exit 0 (47 keys across all three locales identical)
+  - `python scripts/check_file_size.py` -> exit 0
+  - `pre-commit run --files frontend/public/locales/lv/common.json frontend/public/locales/en/common.json frontend/public/locales/ru/common.json` -> exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** LV contains proper diacritics throughout. RU contains full Cyrillic. Legal page subtitles use "TODO: replace with real content" placeholder marker in all three languages. Total key count grew from 24 to 47.
+
+---
+
+## 01e-H2 — frontend-agent — 2026-04-10
+
+- **Task:** Create 11 new placeholder page files under `frontend/src/app/[locale]/(public)/`, upgrade the existing home page with `pages.home` translations and CTA Button, and add a Playwright e2e test covering 12 routes x 3 locales (36 test cases).
+- **Scope (files changed):**
+  - frontend/src/app/[locale]/(public)/layout.tsx (created, passthrough route-group layout)
+  - frontend/src/app/[locale]/(public)/about/page.tsx (created)
+  - frontend/src/app/[locale]/(public)/join/page.tsx (created)
+  - frontend/src/app/[locale]/(public)/trainings/page.tsx (created)
+  - frontend/src/app/[locale]/(public)/directory/page.tsx (created)
+  - frontend/src/app/[locale]/(public)/news/page.tsx (created)
+  - frontend/src/app/[locale]/(public)/resources/page.tsx (created)
+  - frontend/src/app/[locale]/(public)/verify/page.tsx (created)
+  - frontend/src/app/[locale]/(public)/contact/page.tsx (created)
+  - frontend/src/app/[locale]/(public)/legal/privacy/page.tsx (created)
+  - frontend/src/app/[locale]/(public)/legal/terms/page.tsx (created)
+  - frontend/src/app/[locale]/(public)/legal/cookies/page.tsx (created)
+  - frontend/src/app/[locale]/page.tsx (modified: upgraded to pages.home namespace + CTA Button)
+  - frontend/tests/e2e/routes.spec.ts (created, 36 parametrized route tests)
+  - planning/phase-01-design-system/simplify-receipts/01e-H2-frontend-agent.md (created)
+- **Skills invoked:**
+  - `frontend-design` — PASS
+  - `simplify` — PASS
+- **Rule 3 verification:**
+  - `(cd frontend && npm run build)` → exit 0 (40 static pages: 12 routes x 3 locales + /_not-found)
+  - `(cd frontend && npx playwright test tests/e2e/routes.spec.ts)` → exit 0 (36/36 pass)
+  - `(cd frontend && npx vitest run)` → exit 0 (70 tests still pass)
+  - `(cd frontend && npx playwright test)` → exit 0 (41 total: 5 existing + 36 new)
+  - `python scripts/check_file_size.py` → exit 0
+  - `pre-commit run --files frontend/src/app/[locale]/page.tsx "frontend/src/app/[locale]/(public)/layout.tsx" "frontend/src/app/[locale]/(public)/about/page.tsx" "frontend/src/app/[locale]/(public)/join/page.tsx" "frontend/src/app/[locale]/(public)/trainings/page.tsx" "frontend/src/app/[locale]/(public)/directory/page.tsx" "frontend/src/app/[locale]/(public)/news/page.tsx" "frontend/src/app/[locale]/(public)/resources/page.tsx" "frontend/src/app/[locale]/(public)/verify/page.tsx" "frontend/src/app/[locale]/(public)/contact/page.tsx" "frontend/src/app/[locale]/(public)/legal/privacy/page.tsx" "frontend/src/app/[locale]/(public)/legal/terms/page.tsx" "frontend/src/app/[locale]/(public)/legal/cookies/page.tsx" frontend/tests/e2e/routes.spec.ts` → exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** Simplify found two issues and fixed them: (1) `layout.tsx` used `React.ReactNode` without importing React -- changed to `import type { ReactNode } from "react"`; (2) `routes.spec.ts` had TS2532 (object possibly undefined) on `json.pages[pageKey]` -- added explicit type narrowing and a fail-loudly throw with descriptive error message. Pre-existing TS errors in layout test files (`aria-current` type mismatch) are not related to this handoff.

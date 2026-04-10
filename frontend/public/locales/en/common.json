@@ -30,5 +30,56 @@
     "lv": "Latvian",
     "en": "English",
     "ru": "Russian"
+  },
+  "pages": {
+    "home": {
+      "title": "Latvijas Pilates Asociācija",
+      "subtitle": "Uniting Pilates professionals across Latvia. Advance your career through our certification and training programmes.",
+      "cta": "Join Us"
+    },
+    "about": {
+      "title": "About Us",
+      "subtitle": "Learn about the mission, values, and team behind the Latvian Pilates Association."
+    },
+    "join": {
+      "title": "Join LPA",
+      "subtitle": "Become an LPA member and gain access to exclusive resources, training opportunities, and a professional network."
+    },
+    "trainings": {
+      "title": "Trainings",
+      "subtitle": "Find and register for Pilates training courses and workshops across Latvia."
+    },
+    "directory": {
+      "title": "Instructor and Studio Directory",
+      "subtitle": "Find LPA-verified Pilates instructors and studios near you."
+    },
+    "news": {
+      "title": "News",
+      "subtitle": "Stay up to date with the latest LPA events, articles, and announcements."
+    },
+    "resources": {
+      "title": "Resources",
+      "subtitle": "Materials and documents for LPA members — guides, forms, and methodological resources."
+    },
+    "verify": {
+      "title": "Verify Certificate",
+      "subtitle": "Check the authenticity of an LPA-issued certificate by entering the certificate number."
+    },
+    "contact": {
+      "title": "Contact",
+      "subtitle": "Get in touch with the LPA team. We will get back to you as soon as possible."
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "subtitle": "TODO: replace with real content"
+    },
+    "terms": {
+      "title": "Terms of Use",
+      "subtitle": "TODO: replace with real content"
+    },
+    "cookies": {
+      "title": "Cookie Policy",
+      "subtitle": "TODO: replace with real content"
+    }
   }
 }
