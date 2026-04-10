@@ -199,3 +199,33 @@ Source-touching handoffs dated 2026-04-09 or later must:
 - **Notes:** Modal uses hand-rolled focus trap (no Radix dependency). Two `noUncheckedIndexedAccess` TypeScript strict errors in the focus trap were fixed by main session via scope-overrides (focusable[0] and focusable[length-1] possibly undefined with strict indexed access). Toast uses glassmorphism via backdrop-blur-nav + surface-container-highest/80 opacity. All three components portal-free except Modal (portals to document.body).
 
 ---
+
+## 01d-H1 — frontend-agent — 2026-04-10
+
+- **Task:** Build dual-navigation layout shell per `docs/LPA_DESIGN_LANGUAGE.MD` Section 5.3: desktop sticky glassmorphism Header with horizontal nav, mobile floating BottomDock "Sanctuary Bar", Footer, MobileNav full-screen drawer, and LanguageSwitcher. Wire all into `[locale]/layout.tsx`.
+- **Scope (files changed):**
+  - frontend/src/components/layout/Header.tsx (created, ~110 lines; sticky glassmorphism, scroll-shadow, horizontal nav desktop, hamburger mobile)
+  - frontend/src/components/layout/BottomDock.tsx (created, ~70 lines; fixed bottom pill, 5 icon nav items, md:hidden, aria-current)
+  - frontend/src/components/layout/Footer.tsx (created, ~50 lines; surface-container-low, 3-col grid, legal links, copyright)
+  - frontend/src/components/layout/MobileNav.tsx (created, ~90 lines; full-screen glassmorphism drawer, focus trap, ESC close, portal)
+  - frontend/src/components/layout/LanguageSwitcher.tsx (created, ~50 lines; LV/EN/RU buttons, locale-aware routing, aria-pressed)
+  - frontend/src/components/layout/__tests__/Header.test.tsx (7 tests)
+  - frontend/src/components/layout/__tests__/BottomDock.test.tsx (6 tests)
+  - frontend/src/components/layout/__tests__/MobileNav.test.tsx (7 tests)
+  - frontend/src/components/layout/__tests__/LanguageSwitcher.test.tsx (7 tests)
+  - frontend/src/app/[locale]/layout.tsx (modified: renders Header + main + Footer + BottomDock)
+  - frontend/src/app/[locale]/page.tsx (modified: minor layout adjustments)
+  - planning/phase-01-design-system/simplify-receipts/01d-H1-frontend-agent.md (created)
+- **Skills invoked:**
+  - `frontend-design` - PASS
+  - `simplify` - waived - new layout component files following design system spec
+- **Rule 3 verification:**
+  - `(cd frontend && npx vitest run)` -> exit 0 (70 tests, 11 files, all pass)
+  - `(cd frontend && npm run build)` -> exit 0 (3 locale routes, middleware 45.9 kB)
+  - `(cd frontend && npx playwright test)` -> exit 0 (5 tests pass)
+  - `python scripts/check_file_size.py` -> exit 0
+  - `pre-commit run --files <all changed>` -> exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** Single-handoff dispatch (H1 only). Agent ran out of context while fixing jest-dom matcher issues in tests; main session completed the fix via 6 scope-overrides replacing `toBeInTheDocument()` and `toHaveAttribute()` with vanilla vitest equivalents (`toBeTruthy()`, `getAttribute()`). This is the same jest-dom pattern issue from 01c -- should add `@testing-library/jest-dom` setup file or document the vanilla-assertion-only convention to prevent recurrence. Icons in BottomDock use placeholder Unicode/text since Lucide is not yet installed. LanguageSwitcher uses `router.push` for locale switching via pathname rewriting.
+
+---
