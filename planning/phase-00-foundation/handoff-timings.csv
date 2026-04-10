@@ -49,3 +49,4 @@ iso_timestamp,phase,handoff,event,ref,run_id,notes
 2026-04-10T08:29:09.332435+00:00,01f,H1,ci-green,,24233999945,
 2026-04-10T08:29:09.451501+00:00,01f,H2,ci-green,,24233999945,
 2026-04-10T08:29:40.369998+00:00,01e,H2,ci-red,,24233522567,lockfile Node version mismatch — fixed in 01f by setup-node pinning
+2026-04-10T09:07:18.571666+00:00,02a,H1,dispatch-start,,,
