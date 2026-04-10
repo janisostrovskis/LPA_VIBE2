@@ -281,3 +281,43 @@ Source-touching handoffs dated 2026-04-09 or later must:
   - `pre-commit run --files frontend/src/app/[locale]/page.tsx "frontend/src/app/[locale]/(public)/layout.tsx" "frontend/src/app/[locale]/(public)/about/page.tsx" "frontend/src/app/[locale]/(public)/join/page.tsx" "frontend/src/app/[locale]/(public)/trainings/page.tsx" "frontend/src/app/[locale]/(public)/directory/page.tsx" "frontend/src/app/[locale]/(public)/news/page.tsx" "frontend/src/app/[locale]/(public)/resources/page.tsx" "frontend/src/app/[locale]/(public)/verify/page.tsx" "frontend/src/app/[locale]/(public)/contact/page.tsx" "frontend/src/app/[locale]/(public)/legal/privacy/page.tsx" "frontend/src/app/[locale]/(public)/legal/terms/page.tsx" "frontend/src/app/[locale]/(public)/legal/cookies/page.tsx" frontend/tests/e2e/routes.spec.ts` → exit 0
 - **Result:** HANDOFF COMPLETE — PASS
 - **Notes:** Simplify found two issues and fixed them: (1) `layout.tsx` used `React.ReactNode` without importing React -- changed to `import type { ReactNode } from "react"`; (2) `routes.spec.ts` had TS2532 (object possibly undefined) on `json.pages[pageKey]` -- added explicit type narrowing and a fail-loudly throw with descriptive error message. Pre-existing TS errors in layout test files (`aria-current` type mismatch) are not related to this handoff.
+
+---
+
+## 01f-H1 — frontend-agent — 2026-04-10
+
+- **Task:** Install `@axe-core/playwright` and create a Playwright a11y test covering all 12 routes x 3 locales (36 test cases) asserting zero critical/serious WCAG 2.2 AA violations. Fix any violations found.
+- **Scope (files changed):**
+  - frontend/package.json (added `@axe-core/playwright`)
+  - frontend/package-lock.json (regenerated with Node 20 Docker)
+  - frontend/tests/e2e/a11y.spec.ts (created, 36 parametrized axe-core tests)
+  - planning/phase-01-design-system/simplify-receipts/01f-H1-frontend-agent.md (created)
+- **Skills invoked:**
+  - `simplify` - waived - single e2e test file with no business logic
+- **Rule 3 verification:**
+  - `(cd frontend && npm install)` -> exit 0
+  - `(cd frontend && npx playwright test tests/e2e/a11y.spec.ts)` -> exit 0 (36/36 pass, zero critical/serious violations)
+  - `(cd frontend && npx vitest run)` -> exit 0 (70 tests)
+  - `python scripts/check_file_size.py` -> exit 0
+  - `pre-commit run --files frontend/tests/e2e/a11y.spec.ts frontend/package.json` -> exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** Zero critical/serious WCAG violations found across all 36 routes. Glassmorphism elements (Header, BottomDock) passed contrast checks. No component fixes were needed. Dispatched in parallel with 01f H2 (devops-agent, CI job).
+
+---
+
+## 01f-H2 — devops-agent — 2026-04-10
+
+- **Task:** Add `a11y-check` job to CI workflow and add `actions/setup-node@v4` (pinned to Node 20) to all frontend-touching CI jobs to prevent future Node version lockfile drift.
+- **Scope (files changed):**
+  - .github/workflows/ci.yml (added `a11y-check` job with `needs: [e2e]` and `hashFiles` gate; added `actions/setup-node@v4` with `node-version: "20"` to `lint`, `typecheck`, `unit-tests`, `e2e`, and new `a11y-check` jobs)
+  - planning/phase-01-design-system/simplify-receipts/01f-H2-devops-agent.md (created)
+- **Skills invoked:**
+  - `simplify` - PASS (clean)
+- **Rule 3 verification:**
+  - YAML validity (python yaml.safe_load) -> exit 0
+  - `python scripts/check_file_size.py` -> exit 0
+  - `pre-commit run --files .github/workflows/ci.yml` -> exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** setup-node@v4 with Node 20 added to 5 CI jobs (lint, typecheck, unit-tests, e2e, a11y-check). This closes the F7 finding from the 01b efficiency retrospective — CI now pins Node 20 matching `package.json` engines `>=20 <21`, preventing lockfile mismatch. The `a11y-check` job depends on `e2e` and is gated by `hashFiles('frontend/tests/e2e/a11y.spec.ts')` so it's skipped if the test file is absent. Closes Phase 01 sub-phase 01f and the entire Phase 01 design system.
+
+---
