@@ -80,6 +80,48 @@ cd frontend && npm install
 
 Why: bare `cd` persists into subsequent hook invocations, which may use scripts with relative paths, causing spurious BLOCK exits and session deadlocks. See CLAUDE.md "Bash cwd discipline" for the full incident description.
 
+## TypeScript Strict Mode Patterns
+
+### noUncheckedIndexedAccess
+
+`tsconfig.json` enables `noUncheckedIndexedAccess: true`. This means any direct array index expression `arr[i]` has type `T | undefined`, not `T`. Calling methods on the result without a null guard is a compile error.
+
+Correct pattern for focus traps and similar:
+
+```typescript
+// Wrong — arr[0] is T | undefined, .focus() rejected by tsc
+arr[0].focus();
+
+// Correct — narrow first
+const first = arr[0];
+if (first) first.focus();
+
+// Also correct for first/last
+arr.at(0)?.focus();
+arr.at(-1)?.focus();
+```
+
+This applies to any array indexing inside components, hooks, and utilities. Always add a guard or use `?.` before calling methods on indexed results.
+
+Why: Phase 01c — Modal.tsx focus trap used `focusable[0].focus()` and `focusable[focusable.length - 1].focus()` directly. Both were `HTMLElement | undefined` under `noUncheckedIndexedAccess`, failing the build. Required 2 main-session scope overrides to fix.
+
+## Vitest Assertion Convention
+
+Do NOT use `@testing-library/jest-dom` matchers in Vitest unit tests. As of Phase 01, `vitest.config.ts` has no `setupFiles` entry wiring them — they will throw at runtime.
+
+Use vanilla Vitest and native DOM assertions instead:
+
+| Instead of (jest-dom) | Use (vanilla) |
+|---|---|
+| `expect(el).toBeInTheDocument()` | `expect(el).toBeTruthy()` |
+| `expect(el).toHaveAttribute("x", "y")` | `expect(el.getAttribute("x")).toBe("y")` |
+| `expect(el).toHaveClass("foo")` | `expect(el.classList.contains("foo")).toBe(true)` |
+| `expect(el).toBeVisible()` | `expect(el).toBeTruthy()` (or check styles explicitly) |
+
+The `@testing-library/jest-dom` package is installed and can be used once `vitest.config.ts` gains a `setupFiles` entry — but that requires a devops-agent handoff. Until then, use vanilla assertions above.
+
+Why: Phase 01d — layout component tests shipped with jest-dom matchers; all failed at runtime. 7 main-session scope overrides required to replace them.
+
 ## Fail-Loudly Rules
 
 - No empty catch blocks. No unhandled promise rejections.

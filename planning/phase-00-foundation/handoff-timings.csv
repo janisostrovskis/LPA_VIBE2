@@ -44,3 +44,8 @@ iso_timestamp,phase,handoff,event,ref,run_id,notes
 2026-04-10T08:18:21.304361+00:00,01f,H2,dispatch-start,,,
 2026-04-10T08:28:26.855735+00:00,01f,H1,dispatch-end,,,
 2026-04-10T08:28:26.965833+00:00,01f,H2,dispatch-end,,,
+2026-04-10T08:28:56.292216+00:00,01f,H1,commit,a0bcd9c,,
+2026-04-10T08:28:56.407730+00:00,01f,H2,commit,a0bcd9c,,
+2026-04-10T08:29:09.332435+00:00,01f,H1,ci-green,,24233999945,
+2026-04-10T08:29:09.451501+00:00,01f,H2,ci-green,,24233999945,
+2026-04-10T08:29:40.369998+00:00,01e,H2,ci-red,,24233522567,lockfile Node version mismatch — fixed in 01f by setup-node pinning
