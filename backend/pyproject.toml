@@ -60,7 +60,7 @@ warn_unreachable = true
 no_implicit_reexport = true
 
 [[tool.mypy.overrides]]
-module = "app.application.dto.*"
+module = ["app.application.dto.*", "app.api.routes.*"]
 disallow_any_explicit = false  # Pydantic BaseModel triggers explicit-any in strict mode
 
 [tool.bandit]

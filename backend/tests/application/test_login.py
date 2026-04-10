@@ -50,7 +50,8 @@ def _make_use_case(
 @pytest.mark.asyncio
 async def test_login_success() -> None:
     use_case = _make_use_case(member=_make_member(), verify_result=True)
-    result = await use_case.execute(LoginRequest(email="user@example.com", password="Password1"  # pragma: allowlist secret))
+    result = await use_case.execute(LoginRequest(email="user@example.com", password="Password1",  # pragma: allowlist secret
+    ))
 
     assert isinstance(result, Ok)
     assert isinstance(result.value, TokenResponse)
@@ -60,7 +61,8 @@ async def test_login_success() -> None:
 @pytest.mark.asyncio
 async def test_login_wrong_password() -> None:
     use_case = _make_use_case(member=_make_member(), verify_result=False)
-    result = await use_case.execute(LoginRequest(email="user@example.com", password="WrongPass1"  # pragma: allowlist secret))
+    result = await use_case.execute(LoginRequest(email="user@example.com", password="WrongPass1",  # pragma: allowlist secret
+    ))
 
     assert isinstance(result, Err)
     assert isinstance(result.error, InvalidCredentialsError)
@@ -69,7 +71,8 @@ async def test_login_wrong_password() -> None:
 @pytest.mark.asyncio
 async def test_login_unknown_email() -> None:
     use_case = _make_use_case(member=None)
-    result = await use_case.execute(LoginRequest(email="unknown@example.com", password="Password1"  # pragma: allowlist secret))
+    result = await use_case.execute(LoginRequest(email="unknown@example.com", password="Password1",  # pragma: allowlist secret
+    ))
 
     assert isinstance(result, Err)
     assert isinstance(result.error, InvalidCredentialsError)
@@ -79,7 +82,8 @@ async def test_login_unknown_email() -> None:
 async def test_login_magic_link_only_user() -> None:
     """Members with no password_hash (magic-link-only) cannot log in with password."""
     use_case = _make_use_case(member=_make_member(password_hash=None), verify_result=True)
-    result = await use_case.execute(LoginRequest(email="user@example.com", password="Password1"  # pragma: allowlist secret))
+    result = await use_case.execute(LoginRequest(email="user@example.com", password="Password1",  # pragma: allowlist secret
+    ))
 
     assert isinstance(result, Err)
     assert isinstance(result.error, InvalidCredentialsError)

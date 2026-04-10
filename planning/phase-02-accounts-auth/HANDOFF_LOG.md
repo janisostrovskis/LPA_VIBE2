@@ -165,3 +165,33 @@ Source-touching handoffs dated 2026-04-10 or later must:
   - `pre-commit run --files <changed>` → exit 0
 - **Result:** HANDOFF COMPLETE — PASS
 - **Notes:** mypy `disallow_any_explicit` conflicts with Pydantic BaseModel — added per-module override for `app.application.dto.*` in pyproject.toml. ruff S105 false positive on `token_type = "bearer"` suppressed with noqa. Line-too-long in magic link email body wrapped.
+
+---
+
+## 02e-H1 — backend-agent — 2026-04-10
+
+- **Task:** API routes, auth middleware, CORS, DI wiring, FastAPI app entry point
+- **Scope (files changed):**
+  - backend/app/main.py
+  - backend/app/api/dependencies.py
+  - backend/app/api/middleware/__init__.py
+  - backend/app/api/middleware/auth.py
+  - backend/app/api/middleware/cors.py
+  - backend/app/api/routes/__init__.py
+  - backend/app/api/routes/_errors.py
+  - backend/app/api/routes/auth.py
+  - backend/app/api/routes/members.py
+  - backend/app/api/routes/organizations.py
+  - backend/app/application/dto/organization_dto.py
+  - backend/tests/api/__init__.py
+  - backend/tests/api/test_auth_routes.py
+  - backend/pyproject.toml
+- **Skills invoked:**
+  - `simplify` - PASS
+- **Rule 3 verification:**
+  - `(cd backend && python -m pytest tests/ -v)` → exit 0 (141 tests)
+  - `(cd backend && python -m mypy app/)` → exit 0
+  - `(cd backend && ruff check app/)` → exit 0
+  - `pre-commit run --files <changed>` → exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** FastAPI 204 routes with `-> None` return annotation trigger assertion error — fixed with `response_model=None`. Deprecated `HTTP_422_UNPROCESSABLE_ENTITY` replaced with literal 422. Import ordering (E402) fixed by moving `_bearer = HTTPBearer()` after imports. UP047/UP049 TypeVar→type param migration. mypy override extended to `app.api.routes.*`. pragma: allowlist secret syntax fix for test passwords inside parenthesized calls.

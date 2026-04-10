@@ -38,7 +38,8 @@ async def test_register_success() -> None:
     member_repo.create.side_effect = lambda m: m
 
     use_case = RegisterMember(member_repo=member_repo, hash_fn=lambda p: "hashed_" + p)
-    dto = MemberCreateDto(email="new@example.com", display_name="Alice", password="Password1"  # pragma: allowlist secret)
+    dto = MemberCreateDto(email="new@example.com", display_name="Alice", password="Password1",  # pragma: allowlist secret
+    )
     result = await use_case.execute(dto)
 
     assert isinstance(result, Ok)
@@ -52,7 +53,8 @@ async def test_register_duplicate_email() -> None:
     member_repo.get_by_email.return_value = _make_member("existing@example.com")
 
     use_case = RegisterMember(member_repo=member_repo, hash_fn=lambda p: "hashed_" + p)
-    dto = MemberCreateDto(email="existing@example.com", display_name="Bob", password="Password1"  # pragma: allowlist secret)
+    dto = MemberCreateDto(email="existing@example.com", display_name="Bob", password="Password1",  # pragma: allowlist secret
+    )
     result = await use_case.execute(dto)
 
     assert isinstance(result, Err)
@@ -77,7 +79,8 @@ async def test_register_invalid_email() -> None:
     member_repo = AsyncMock()
 
     use_case = RegisterMember(member_repo=member_repo, hash_fn=lambda p: "hashed_" + p)
-    dto = MemberCreateDto(email="not-an-email", display_name="Dave", password="Password1"  # pragma: allowlist secret)
+    dto = MemberCreateDto(email="not-an-email", display_name="Dave", password="Password1",  # pragma: allowlist secret
+    )
     result = await use_case.execute(dto)
 
     assert isinstance(result, Err)

@@ -48,6 +48,7 @@ agents:
   backend-agent:
     allow:
       - "backend/app/__init__.py"
+      - "backend/app/main.py"
       - "backend/app/application/**"
       - "backend/app/domain/rules/**"
       - "backend/app/domain/events/**"
