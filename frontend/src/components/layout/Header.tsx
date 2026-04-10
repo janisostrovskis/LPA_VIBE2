@@ -5,30 +5,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import Button from "@/components/ui/Button";
+import { buildNavLinks, isActiveRoute } from "@/lib/navigation";
 import LanguageSwitcher from "./LanguageSwitcher";
 import MobileNav from "./MobileNav";
 
 interface HeaderProps {
   locale: string;
-}
-
-interface NavLink {
-  key: string;
-  href: string;
-}
-
-function buildNavLinks(locale: string): NavLink[] {
-  return [
-    { key: "home", href: `/${locale}` },
-    { key: "about", href: `/${locale}/about` },
-    { key: "join", href: `/${locale}/join` },
-    { key: "trainings", href: `/${locale}/trainings` },
-    { key: "directory", href: `/${locale}/directory` },
-    { key: "news", href: `/${locale}/news` },
-    { key: "resources", href: `/${locale}/resources` },
-    { key: "verify", href: `/${locale}/verify` },
-    { key: "contact", href: `/${locale}/contact` },
-  ];
 }
 
 export default function Header({ locale }: HeaderProps): React.JSX.Element {
@@ -49,11 +31,7 @@ export default function Header({ locale }: HeaderProps): React.JSX.Element {
   const navLinks = buildNavLinks(locale);
 
   function isActive(href: string): boolean {
-    // Exact match for home, prefix match for others
-    if (href === `/${locale}`) {
-      return pathname === href;
-    }
-    return pathname.startsWith(href);
+    return isActiveRoute(href, pathname, locale);
   }
 
   return (

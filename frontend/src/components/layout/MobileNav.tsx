@@ -4,40 +4,15 @@ import React, { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { buildNavLinks } from "@/lib/navigation";
+import { getFocusableElements } from "@/lib/focus-trap";
 import LanguageSwitcher from "./LanguageSwitcher";
-
-interface NavLink {
-  key: string;
-  href: string;
-}
 
 interface MobileNavProps {
   id?: string;
   open: boolean;
   onClose: () => void;
   locale: string;
-}
-
-function buildNavLinks(locale: string): NavLink[] {
-  return [
-    { key: "home", href: `/${locale}` },
-    { key: "about", href: `/${locale}/about` },
-    { key: "join", href: `/${locale}/join` },
-    { key: "trainings", href: `/${locale}/trainings` },
-    { key: "directory", href: `/${locale}/directory` },
-    { key: "news", href: `/${locale}/news` },
-    { key: "resources", href: `/${locale}/resources` },
-    { key: "verify", href: `/${locale}/verify` },
-    { key: "contact", href: `/${locale}/contact` },
-  ];
-}
-
-function getFocusableElements(container: HTMLElement): HTMLElement[] {
-  return Array.from(
-    container.querySelectorAll<HTMLElement>(
-      'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
-    )
-  ).filter((el) => !el.hasAttribute("disabled") && el.tabIndex !== -1);
 }
 
 export default function MobileNav({

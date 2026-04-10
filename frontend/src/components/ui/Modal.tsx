@@ -2,6 +2,7 @@
 
 import React, { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
+import { getFocusableElements } from "@/lib/focus-trap";
 
 export interface ModalProps {
   open: boolean;
@@ -10,14 +11,6 @@ export interface ModalProps {
   titleId?: string;
   children: React.ReactNode;
   className?: string;
-}
-
-function getFocusableElements(container: HTMLElement): HTMLElement[] {
-  return Array.from(
-    container.querySelectorAll<HTMLElement>(
-      'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
-    )
-  ).filter((el) => !el.hasAttribute("disabled") && el.tabIndex !== -1);
 }
 
 export default function Modal({
