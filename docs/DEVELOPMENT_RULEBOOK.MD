@@ -16,11 +16,13 @@ PLAN → IMPLEMENT → TEST → SIMPLIFY → SECURITY REVIEW → GATE
 ```
 
 1. **PLAN:** Read the relevant sub-plan from `planning/phase-NN/PLAN.md`. If no plan exists, create one using the template in section B.8 and wait for approval before writing code.
-2. **IMPLEMENT:** Write code following COLA structure. Every file must belong to exactly one layer. Respect agent scope boundaries defined in `CLAUDE.md`.
-3. **TEST:** All tests defined in the sub-plan's testing requirements must pass. Zero test failures tolerated.
-4. **SIMPLIFY:** Run `/simplify` against all changed files. This checks for code duplication, unnecessary complexity, and reuse opportunities. All findings must be resolved. Re-run until clean.
-5. **SECURITY REVIEW:** Complete the security review checklist (section B.3). All items must pass. Document results in `planning/phase-NN/SECURITY_REVIEW.md`.
-6. **GATE:** Complete the testing gate document `planning/phase-NN/TESTING_GATE.md` using the template in section B.4. All criteria must pass to proceed to the next phase.
+2. **SCOPE.YAML PRE-AUDIT (mandatory before first dispatch).** Before dispatching the first agent handoff of a phase, main session must verify that every file listed in PLAN.md deliverables is covered by the relevant agent's `allow` list in `.claude/scope.yaml`. Procedure: for each deliverable path, check that a pattern in scope.yaml matches it (glob-match mentally or with `fnmatch`). If a gap exists, amend scope.yaml before dispatch — not after a blocked handoff. Why: Phase 02 accumulated ~20 scope overrides because alembic paths, application/ports files, and `backend/app/main.py` were absent from scope.yaml at dispatch time.
+3. **IMPLEMENT:** Write code following COLA structure. Every file must belong to exactly one layer. Respect agent scope boundaries defined in `CLAUDE.md`.
+4. **TEST:** All tests defined in the sub-plan's testing requirements must pass. Zero test failures tolerated.
+5. **CROSS-SUB-PHASE SIMPLIFY CHECKPOINT.** After every parallel dispatch pair lands (and after every 3 sequential handoffs), main session must run simplify across the union of all changed files from those handoffs before proceeding. Per-handoff simplify cannot detect cross-cutting issues (mismatched model vs entity constraints, missing `__init__.py` re-exports, duplicate logic across agent boundaries). Why: Phase 02a+02b per-handoff simplify each passed CLEAN; post-landing cross-pass found tautology function, missing re-exports, and missing DB CHECK constraints.
+6. **SIMPLIFY (per-handoff):** Run `/simplify` against all changed files in the handoff. This checks for code duplication, unnecessary complexity, and reuse opportunities. All findings must be resolved. Re-run until clean.
+7. **SECURITY REVIEW:** Complete the security review checklist (section B.3). All items must pass. Document results in `planning/phase-NN/SECURITY_REVIEW.md`.
+8. **GATE:** Complete the testing gate document `planning/phase-NN/TESTING_GATE.md` using the template in section B.4. All criteria must pass to proceed to the next phase.
 
 **Phase progression is strictly sequential.** Phase N+1 cannot begin until Phase N's gate is marked PASS.
 
@@ -55,6 +57,8 @@ When Agent A needs work done in Agent B's scope:
 ### Parallel dispatch for independent handoffs
 
 When a plan contains handoffs with no file overlap and no ordering dependency, main session MUST dispatch them as multiple `Agent` tool calls in a single message. Sequential dispatch of independent handoffs wastes one full roundtrip per parallelizable pair. See `CLAUDE.md` → "Parallel dispatch for independent handoffs" for the full protocol.
+
+**Mandatory parallel pair — frontend + i18n:** Any sub-phase that ships new frontend pages must include a parallel i18n-agent handoff to deliver the translation keys for those pages. The frontend-agent handoff and the i18n-agent handoff have no file overlap (`frontend/src/**` vs `frontend/public/locales/**`) and no ordering dependency — dispatch them together. Serializing them wastes one full roundtrip and risks the frontend-agent leaving undefined translation keys in the build. Why: Phase 02f — i18n handoff was not planned; main session hand-fixed all locale files post-dispatch.
 
 ### CI watch runs in the background by default
 

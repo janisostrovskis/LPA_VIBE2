@@ -246,7 +246,7 @@ function LoginPageContent() {
           {t("noAccount")}{" "}
           <a
             href={`/${locale}/join`}
-            className="text-lpa-secondary hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-lpa-secondary focus-visible:outline-offset-2 rounded-sm"
+            className="text-lpa-secondary underline hover:no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-lpa-secondary focus-visible:outline-offset-2 rounded-sm"
           >
             {t("register")}
           </a>

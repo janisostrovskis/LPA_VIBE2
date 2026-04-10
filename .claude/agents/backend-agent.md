@@ -79,6 +79,46 @@ After completing any code change but before reporting done, you MUST invoke the 
 
 When the orchestrator dispatches you with an execution brief, **execute directly**. Do not re-plan. Do not write a plan file. Do not present a plan back to the orchestrator for approval. The orchestrator has already planned the work — your job is to do it. If the brief is genuinely ambiguous (e.g., a referenced file doesn't exist, a constraint contradicts another constraint, the verification commands won't run), ask **one focused clarifying question** and stop. Do not free-form propose alternatives. This rule exists because repeated plan-mode entries in Phase 0 sub-phases 00e/00f cost dispatch roundtrips.
 
+## FastAPI Footguns
+
+The following patterns cause silent or assertion failures and MUST be avoided:
+
+- **204 routes:** A route with `status_code=204` MUST include `response_model=None` in the decorator. Relying on `-> None` alone triggers a FastAPI internal assertion error at startup. Example: `@router.post("/logout", status_code=204, response_model=None)`.
+- **`HTTPBearer()` at module level:** Do NOT instantiate `HTTPBearer()` or any FastAPI `Security`/`Depends` object at module top level before the imports block ends. It triggers ruff E402. Place it after all imports.
+- **TypeVar syntax:** Python 3.12+ uses PEP 695 `type` parameter syntax (`type T = int`). Avoid old-style `TypeVar("T")` in new files — ruff UP047/UP049 will flag it.
+- **Deprecated HTTP status constants:** Use integer literals (e.g., `422`) instead of deprecated `starlette.status.HTTP_422_UNPROCESSABLE_ENTITY`-style constants where the constant is deprecated in the installed version.
+
+Why: Phase 02e — all four patterns appeared and required main-session scope overrides to fix post-dispatch.
+
+## Pydantic DTOs and mypy `disallow_any_explicit`
+
+`pyproject.toml` carries a per-module mypy override disabling `disallow_any_explicit` for `app.application.dto.*` and `app.api.routes.*`. This is intentional — Pydantic v2 BaseModel internals require `Any` in ways incompatible with mypy strict mode.
+
+- New DTO files under `app/application/dto/` and route files under `app/api/routes/` automatically inherit this override. Do NOT add `type: ignore[explicit-any]` comments or fight the type checker on these modules.
+- Domain dataclasses (NOT in these packages) must still satisfy full strict mode. Never use `Any` in domain entities.
+
+Why: Phase 02d/02e — mypy `disallow_any_explicit` conflicts were fixed post-dispatch twice, requiring pyproject.toml amendments and scope overrides each time.
+
+## `detect-secrets` / gitleaks Pragma Placement
+
+When suppressing a secret-scanner false positive with `# pragma: allowlist secret`, place the comment on the **same logical line as the string**, not after a closing parenthesis on the next line. In multi-line parenthesized calls:
+
+```python
+# CORRECT — pragma is on the string's own line
+result = some_function(
+    password="test-password-123",  # pragma: allowlist secret
+    other_arg=value,
+)
+
+# WRONG — pragma after closing paren is NOT on the string's line
+result = some_function(
+    password="test-password-123",
+    other_arg=value,
+)  # pragma: allowlist secret  ← scanner does not associate this with the string above
+```
+
+Why: Phase 02d/02e — incorrect pragma placement caused both scan failures and rereads; correct placement required multiple main-session fixes.
+
 ## Receipt Requirement
 
 Every handoff you complete MUST be recorded in `planning/phase-NN/HANDOFF_LOG.md` with the schema documented there (Task / Scope / Skills invoked / Rule 3 verification / Result / Notes). `scripts/check_handoff_log.py` validates the log in pre-commit and in the CI `handoff-hygiene` job. A missing, malformed, or skill-free entry blocks the merge. Record PASS/FAIL and every command you ran with its exit code — this is the only evidence that your work was verified.

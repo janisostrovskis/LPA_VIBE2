@@ -122,6 +122,59 @@ The `@testing-library/jest-dom` package is installed and can be used once `vites
 
 Why: Phase 01d — layout component tests shipped with jest-dom matchers; all failed at runtime. 7 main-session scope overrides required to replace them.
 
+## Translation Keys and i18n-Agent Boundary
+
+`frontend/public/locales/` is **i18n-Agent scope**. You MUST NOT write to those files.
+
+When you create or modify a page that displays user-facing text via `next-intl`:
+1. Use translation keys in your components as normal (`t("auth.login.title")` etc.).
+2. In your handoff Notes, list every new translation key you referenced.
+3. Do NOT attempt to create or modify locale JSON files yourself.
+
+The orchestrator will dispatch i18n-agent in parallel (or immediately after) to add the keys for all three locales (LV/EN/RU). Hardcoding strings or referencing undefined keys causes build failures and blank UI strings.
+
+Why: Phase 02f — frontend-agent omitted all auth translation keys; main session added them post-dispatch for all 3 locales.
+
+## `useSearchParams()` and Suspense Boundary
+
+Any component that calls `useSearchParams()` must be wrapped in a `<Suspense>` boundary. Next.js App Router opts the whole page out of static rendering otherwise, causing a build error.
+
+Pattern:
+```tsx
+// InnerForm uses useSearchParams()
+function LoginInner() {
+  const params = useSearchParams();
+  // ...
+}
+
+// Page wraps it
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginInner />
+    </Suspense>
+  );
+}
+```
+
+Why: Phase 02f — login page used `useSearchParams()` at top level; the missing `Suspense` boundary caused a Next.js build error, fixed by main session.
+
+## Inline Link Accessibility (a11y)
+
+Tailwind CSS preflight resets ALL anchor elements to have no underline. For inline links within paragraph text (i.e., `<a>` inside `<p>` or similar body copy), you MUST add the `underline` class. Without it the link is indistinguishable from surrounding text, failing WCAG 2.2 AA non-text contrast.
+
+```tsx
+// Wrong — link is invisible without underline
+<p>Already have an account? <a href="/login">Sign in</a></p>
+
+// Correct — underline class restores WCAG-required distinction
+<p>Already have an account? <a href="/login" className="underline">Sign in</a></p>
+```
+
+Navigation links, button-style links, and standalone CTAs are exempt — this rule applies to inline text links only.
+
+Why: Phase 02f — auth pages shipped inline links without `underline`; axe CI flagged WCAG 2.2 AA failure; main session fixed post-dispatch.
+
 ## Fail-Loudly Rules
 
 - No empty catch blocks. No unhandled promise rejections.
