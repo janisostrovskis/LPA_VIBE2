@@ -59,6 +59,10 @@ disallow_any_explicit = true
 warn_unreachable = true
 no_implicit_reexport = true
 
+[[tool.mypy.overrides]]
+module = "app.application.dto.*"
+disallow_any_explicit = false  # Pydantic BaseModel triggers explicit-any in strict mode
+
 [tool.bandit]
 targets = ["app"]
 exclude_dirs = ["tests", "alembic/versions"]

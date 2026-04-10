@@ -131,3 +131,37 @@ Source-touching handoffs dated 2026-04-10 or later must:
   - `pre-commit run --files <changed>` → exit 0
 - **Result:** HANDOFF COMPLETE — PASS
 - **Notes:** validate_token returns Result[dict, UnauthorizedError] instead of raising — aligned with project's Result pattern. ruff I001 import sorting fix applied by main session. PyJWT and bcrypt added to pyproject.toml dependencies.
+
+---
+
+## 02d-H1 — backend-agent — 2026-04-10
+
+- **Task:** Application use cases: register, login (password + magic link), refresh token, update profile, GDPR export, create org, invite member
+- **Scope (files changed):**
+  - backend/app/application/dto/__init__.py
+  - backend/app/application/dto/member_dto.py
+  - backend/app/application/dto/auth_dto.py
+  - backend/app/application/use_cases/__init__.py
+  - backend/app/application/use_cases/auth/__init__.py
+  - backend/app/application/use_cases/auth/register.py
+  - backend/app/application/use_cases/auth/login_password.py
+  - backend/app/application/use_cases/auth/login_magic_link.py
+  - backend/app/application/use_cases/auth/refresh_token.py
+  - backend/app/application/use_cases/member/__init__.py
+  - backend/app/application/use_cases/member/update_profile.py
+  - backend/app/application/use_cases/member/export_data.py
+  - backend/app/application/use_cases/organization/__init__.py
+  - backend/app/application/use_cases/organization/create_organization.py
+  - backend/app/application/use_cases/organization/invite_member.py
+  - backend/tests/application/test_register.py
+  - backend/tests/application/test_login.py
+  - backend/pyproject.toml
+- **Skills invoked:**
+  - `simplify` - PASS
+- **Rule 3 verification:**
+  - `(cd backend && python -m pytest tests/ -v)` → exit 0 (135 tests)
+  - `(cd backend && python -m mypy app/)` → exit 0 (after mypy override for Pydantic DTOs)
+  - `(cd backend && ruff check app/)` → exit 0 (after S105 noqa + E501 line wrap)
+  - `pre-commit run --files <changed>` → exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** mypy `disallow_any_explicit` conflicts with Pydantic BaseModel — added per-module override for `app.application.dto.*` in pyproject.toml. ruff S105 false positive on `token_type = "bearer"` suppressed with noqa. Line-too-long in magic link email body wrapped.
