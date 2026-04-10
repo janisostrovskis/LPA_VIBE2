@@ -80,3 +80,54 @@ Source-touching handoffs dated 2026-04-10 or later must:
   - `pre-commit run --files backend/app/domain/rules/auth_rules.py backend/app/domain/errors/auth_error.py backend/app/domain/events/member_registered.py backend/app/domain/events/member_logged_in.py backend/tests/domain/rules/test_auth_rules.py backend/tests/domain/errors/test_auth_errors.py backend/tests/domain/events/test_domain_events.py` → exit 0
 - **Result:** HANDOFF COMPLETE — PASS
 - **Notes:** Ruff `--fix` was initially run over all of `tests/` which caused the scope guard to revert database-agent-owned files (`test_email_vo.py`, `test_locale_vo.py`). Corrected by scoping ruff to only backend-agent-owned test subdirectories. Simplify finding: `method: str` in `MemberLoggedIn` replaced with `Literal["password", "magic_link"]` to eliminate stringly-typed field and its explanatory comment.
+
+---
+
+## 02c-H1 — database-agent — 2026-04-10
+
+- **Task:** Repository ABC ports + SQLAlchemy implementations for member, organization, magic link
+- **Scope (files changed):**
+  - backend/app/application/ports/member_repository.py
+  - backend/app/application/ports/organization_repository.py
+  - backend/app/application/ports/magic_link_repository.py
+  - backend/app/infrastructure/database/repositories/__init__.py
+  - backend/app/infrastructure/database/repositories/member_repository.py
+  - backend/app/infrastructure/database/repositories/organization_repository.py
+  - backend/app/infrastructure/database/repositories/magic_link_repository.py
+  - backend/tests/infrastructure/database/__init__.py
+  - backend/tests/infrastructure/database/test_repositories.py
+- **Skills invoked:**
+  - `simplify` - PASS
+- **Rule 3 verification:**
+  - `(cd backend && python -m pytest tests/ -v)` → exit 0
+  - `(cd backend && python -m mypy app/)` → exit 0 (after main-session fix for rowcount typing)
+  - `(cd backend && ruff check app/)` → exit 0
+  - `pre-commit run --files <changed>` → exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** mypy `attr-defined` error on `CursorResult.rowcount` fixed by main session with `type: ignore[attr-defined]` — known SQLAlchemy async typing gap.
+
+---
+
+## 02c-H2 — backend-agent — 2026-04-10
+
+- **Task:** Auth infrastructure: JWT service (PyJWT/HS256), password hashing (bcrypt), email sender port + stub
+- **Scope (files changed):**
+  - backend/app/application/ports/auth_service.py
+  - backend/app/application/ports/email_sender.py
+  - backend/app/infrastructure/auth/__init__.py
+  - backend/app/infrastructure/auth/jwt_service.py
+  - backend/app/infrastructure/auth/password_service.py
+  - backend/app/infrastructure/auth/email_sender_stub.py
+  - backend/tests/application/__init__.py
+  - backend/tests/application/test_jwt_service.py
+  - backend/tests/application/test_password_service.py
+  - backend/pyproject.toml
+- **Skills invoked:**
+  - `simplify` - PASS
+- **Rule 3 verification:**
+  - `(cd backend && python -m pytest tests/ -v)` → exit 0
+  - `(cd backend && python -m mypy app/)` → exit 0
+  - `(cd backend && ruff check app/)` → exit 0 (after main-session import sorting fix)
+  - `pre-commit run --files <changed>` → exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** validate_token returns Result[dict, UnauthorizedError] instead of raising — aligned with project's Result pattern. ruff I001 import sorting fix applied by main session. PyJWT and bcrypt added to pyproject.toml dependencies.
