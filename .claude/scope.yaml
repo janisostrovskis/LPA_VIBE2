@@ -58,6 +58,9 @@ agents:
       - "backend/tests/application/**"
       - "backend/tests/api/**"
       - "backend/tests/lib/**"
+      - "backend/tests/domain/rules/**"
+      - "backend/tests/domain/errors/**"
+      - "backend/tests/domain/events/**"
       - "planning/**/HANDOFF_LOG.md"
       - "planning/**/simplify-receipts/**"
 
