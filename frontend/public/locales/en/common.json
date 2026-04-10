@@ -31,6 +31,30 @@
     "en": "English",
     "ru": "Russian"
   },
+  "auth": {
+    "register": "Register",
+    "login": "Log in",
+    "loginSubtitle": "Enter your credentials",
+    "logout": "Log out",
+    "email": "Email",
+    "password": "Password",
+    "displayName": "Name",
+    "locale": "Language",
+    "required": "is required",
+    "magicLink": "Log in with link",
+    "magicLinkSent": "Link sent! Check your email.",
+    "registerSuccess": "Registration successful! Please log in.",
+    "registerError": "Registration failed. Please try again.",
+    "invalidCredentials": "Incorrect email or password.",
+    "profile": "Profile",
+    "editProfile": "Edit profile",
+    "exportData": "Export data",
+    "saved": "Saved!",
+    "noAccount": "No account?",
+    "haveAccount": "Already have an account?",
+    "passwordTooShort": "Password must be at least 8 characters.",
+    "passwordHint": "At least 8 characters, one uppercase letter, one digit"
+  },
   "pages": {
     "home": {
       "title": "Latvijas Pilates Asociācija",

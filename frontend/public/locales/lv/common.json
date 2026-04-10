@@ -31,6 +31,30 @@
     "en": "Angļu",
     "ru": "Krievu"
   },
+  "auth": {
+    "register": "Reģistrēties",
+    "login": "Ieiet",
+    "loginSubtitle": "Ievadiet savus pieteikšanās datus",
+    "logout": "Iziet",
+    "email": "E-pasts",
+    "password": "Parole",
+    "displayName": "Vārds",
+    "locale": "Valoda",
+    "required": "ir obligāts",
+    "magicLink": "Pieteikties ar saiti",
+    "magicLinkSent": "Saite nosūtīta! Pārbaudiet e-pastu.",
+    "registerSuccess": "Reģistrācija veiksmīga! Lūdzu, ieejiet.",
+    "registerError": "Reģistrācija neizdevās. Mēģiniet vēlreiz.",
+    "invalidCredentials": "Nepareizs e-pasts vai parole.",
+    "profile": "Profils",
+    "editProfile": "Rediģēt profilu",
+    "exportData": "Eksportēt datus",
+    "saved": "Saglabāts!",
+    "noAccount": "Nav konta?",
+    "haveAccount": "Jau ir konts?",
+    "passwordTooShort": "Parolei jābūt vismaz 8 simboliem.",
+    "passwordHint": "Vismaz 8 simboli, viens lielais burts, viens cipars"
+  },
   "pages": {
     "home": {
       "title": "Latvijas Pilates Asociācija",

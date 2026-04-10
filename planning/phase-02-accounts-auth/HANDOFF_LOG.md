@@ -195,3 +195,28 @@ Source-touching handoffs dated 2026-04-10 or later must:
   - `pre-commit run --files <changed>` → exit 0
 - **Result:** HANDOFF COMPLETE — PASS
 - **Notes:** FastAPI 204 routes with `-> None` return annotation trigger assertion error — fixed with `response_model=None`. Deprecated `HTTP_422_UNPROCESSABLE_ENTITY` replaced with literal 422. Import ordering (E402) fixed by moving `_bearer = HTTPBearer()` after imports. UP047/UP049 TypeVar→type param migration. mypy override extended to `app.api.routes.*`. pragma: allowlist secret syntax fix for test passwords inside parenthesized calls.
+
+---
+
+## 02f-H1 — frontend-agent — 2026-04-10
+
+- **Task:** Frontend auth pages (join, login, profile), API client, auth context, auth translations
+- **Scope (files changed):**
+  - frontend/src/lib/api-client.ts
+  - frontend/src/lib/auth-context.tsx
+  - frontend/src/app/[locale]/(public)/join/page.tsx
+  - frontend/src/app/[locale]/(public)/login/page.tsx
+  - frontend/src/app/[locale]/(auth)/profile/page.tsx
+  - frontend/src/app/[locale]/(auth)/layout.tsx
+  - frontend/src/app/[locale]/layout.tsx
+  - frontend/public/locales/lv/common.json
+  - frontend/public/locales/en/common.json
+  - frontend/public/locales/ru/common.json
+- **Skills invoked:**
+  - `simplify` - PASS
+- **Rule 3 verification:**
+  - `(cd frontend && npx vitest run)` → exit 0 (70 tests)
+  - `(cd frontend && npm run build)` → exit 0
+  - `pre-commit run --files <changed>` → exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** Agent omitted auth translation keys — added by main session for all 3 locales (LV/EN/RU). useSearchParams() in login page required Suspense boundary — fixed by wrapping in inner component. No new vitest tests added (client components with API deps are better tested via E2E in 02g).
