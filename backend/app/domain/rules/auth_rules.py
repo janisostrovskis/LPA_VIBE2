@@ -38,8 +38,3 @@ def is_magic_link_expired(expires_at: datetime, now: datetime | None = None) -> 
     if effective_now.tzinfo is None:
         effective_now = effective_now.replace(tzinfo=UTC)
     return effective_now >= expires_at
-
-
-def is_magic_link_used(used: bool) -> bool:
-    """Return True if the magic link has already been consumed."""
-    return used

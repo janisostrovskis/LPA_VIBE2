@@ -65,6 +65,10 @@ def upgrade() -> None:
             server_default=sa.text("now()"),
         ),
         sa.PrimaryKeyConstraint("id"),
+        sa.CheckConstraint(
+            "preferred_locale IN ('lv', 'en', 'ru')",
+            name="ck_users_preferred_locale",
+        ),
     )
     # Case-insensitive uniqueness on email via functional index.
     op.create_index(
@@ -123,6 +127,10 @@ def upgrade() -> None:
             ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint("user_id", "role_name"),
+        sa.CheckConstraint(
+            "role_name IN ('member', 'org_admin', 'content_editor', 'reviewer', 'site_admin')",
+            name="ck_user_roles_role_name",
+        ),
     )
 
     # ------------------------------------------------------------------

@@ -6,7 +6,6 @@ from datetime import UTC, datetime, timedelta
 
 from app.domain.rules.auth_rules import (
     is_magic_link_expired,
-    is_magic_link_used,
     validate_password_strength,
 )
 
@@ -70,11 +69,3 @@ class TestIsMagicLinkExpired:
         naive_future = datetime(2099, 1, 1)
         naive_now = datetime(2000, 1, 1)
         assert is_magic_link_expired(expires_at=naive_future, now=naive_now) is False
-
-
-class TestIsMagicLinkUsed:
-    def test_used(self) -> None:
-        assert is_magic_link_used(True) is True
-
-    def test_not_used(self) -> None:
-        assert is_magic_link_used(False) is False
