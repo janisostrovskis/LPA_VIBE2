@@ -25,7 +25,7 @@
 | 11 | Input validation | PASS | Email validated via regex VO. Password strength checked (8+ chars, upper, lower, digit). Locale validated against Locale enum. CHECK constraints in DB. |
 | 12 | Rate limiting | CAVEAT | No rate limiting on login/register/magic-link endpoints. Not a blocker for Phase 02 (no public deployment), but MUST be added before production (Phase 09). |
 | 13 | RBAC | CAVEAT | Role data exists in `user_roles` table with CHECK constraint, but no endpoint-level role enforcement yet. All authed endpoints just check "is authenticated" not "has role X". Role-based access should be wired in Phase 03+ as admin routes are added. |
-| 14 | Dependency audit | PASS | PyJWT 2.x, bcrypt 4.x — no known vulnerabilities. Frontend deps unchanged from Phase 01 audit. |
+| 14 | Dependency audit | PASS | `pip-audit`: 0 production vulnerabilities (virtualenv 20.26.2 has PYSEC-2024-187 but is dev-only). `npm audit --omit=dev`: 0 vulnerabilities. |
 | 15 | GDPR export | PASS | `GET /me/export` requires auth, returns all member fields as JSON dict. Endpoint is auth-protected. |
 
 ## Findings

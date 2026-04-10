@@ -220,3 +220,17 @@ Source-touching handoffs dated 2026-04-10 or later must:
   - `pre-commit run --files <changed>` → exit 0
 - **Result:** HANDOFF COMPLETE — PASS
 - **Notes:** Agent omitted auth translation keys — added by main session for all 3 locales (LV/EN/RU). useSearchParams() in login page required Suspense boundary — fixed by wrapping in inner component. No new vitest tests added (client components with API deps are better tested via E2E in 02g).
+
+---
+
+## 02g-H1 — devops-agent — 2026-04-10
+
+- **Task:** Replace placeholder CMD in backend/Dockerfile with real uvicorn entrypoint now that app/main.py exists
+- **Scope (files changed):**
+  - backend/Dockerfile
+- **Skills invoked:**
+  - `simplify` — waived — single-line CMD replacement in a Dockerfile, no logic to simplify
+- **Rule 3 verification:**
+  - `pre-commit run --files backend/Dockerfile` → exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** Removed stale comment referencing sub-phase 00f. CMD updated from placeholder python -c sys.exit(0) to `uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload`. Docker runtime verification (docker build + container start) is PENDING-VERIFICATION — Docker daemon not available in this session; orchestrator should verify with `docker compose up backend` before merging.
