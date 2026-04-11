@@ -15,5 +15,4 @@ COPY . .
 
 EXPOSE 8000
 
-# Real uvicorn CMD lands in sub-phase 00f once backend/app/main.py exists.
-CMD ["python", "-c", "import sys; sys.stderr.write('LPA backend container: app/main.py not yet implemented (sub-phases 00d/00e/00f). Image build and dependency install verified.\\n'); sys.exit(0)"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

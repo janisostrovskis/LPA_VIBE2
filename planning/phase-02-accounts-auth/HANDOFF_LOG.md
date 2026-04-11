@@ -223,6 +223,22 @@ Source-touching handoffs dated 2026-04-10 or later must:
 
 ---
 
+## 02g-H2 — devops-agent — 2026-04-10
+
+- **Task:** Change backend exposed host port from 8000 to 8001 (port 8000 in use on dev machine)
+- **Scope (files changed):**
+  - docker-compose.yml
+  - .env.example
+- **Skills invoked:**
+  - `simplify` — waived — two config files with no logic; port-number substitution only
+  - `update-config` — N/A (no .claude/settings.json changes)
+- **Rule 3 verification:**
+  - `pre-commit run --files docker-compose.yml .env.example` → exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** Host-side mapping changed to 8001:8000 in docker-compose.yml (line 34) and NEXT_PUBLIC_API_URL default updated (line 48). .env.example BACKEND_PORT and NEXT_PUBLIC_API_URL updated to 8001. Uvicorn internal port (8000) and Dockerfile EXPOSE unchanged. Docker runtime verification is PENDING-VERIFICATION — Docker daemon not available in this session; orchestrator should confirm `docker compose up backend` binds on host port 8001.
+
+---
+
 ## 02g-H1 — devops-agent — 2026-04-10
 
 - **Task:** Replace placeholder CMD in backend/Dockerfile with real uvicorn entrypoint now that app/main.py exists
@@ -234,3 +250,19 @@ Source-touching handoffs dated 2026-04-10 or later must:
   - `pre-commit run --files backend/Dockerfile` → exit 0
 - **Result:** HANDOFF COMPLETE — PASS
 - **Notes:** Removed stale comment referencing sub-phase 00f. CMD updated from placeholder python -c sys.exit(0) to `uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload`. Docker runtime verification (docker build + container start) is PENDING-VERIFICATION — Docker daemon not available in this session; orchestrator should verify with `docker compose up backend` before merging.
+
+---
+
+## 02g-H3 — devops-agent — 2026-04-10
+
+- **Task:** Add PyJWT and bcrypt to backend/pyproject.toml runtime dependencies (both were imported by backend code but missing from the declared dep list)
+- **Scope (files changed):**
+  - backend/pyproject.toml
+- **Skills invoked:**
+  - `simplify` — waived — two-line dep addition with no logic to simplify
+  - `update-config` — N/A (no .claude/settings.json changes)
+- **Rule 3 verification:**
+  - `pip install "PyJWT>=2.8,<3" "bcrypt>=4.1,<5"` → exit 0 (both already satisfied: PyJWT 2.9.0, bcrypt 4.2.1 on Windows — confirms cross-platform wheel availability)
+  - `pre-commit run --files backend/pyproject.toml` → exit 0
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** Both PyJWT and bcrypt publish Windows wheels — no PEP 508 platform marker needed. The 02c-H2 handoff entry claimed these were added but the file did not contain them; this entry corrects the omission.
