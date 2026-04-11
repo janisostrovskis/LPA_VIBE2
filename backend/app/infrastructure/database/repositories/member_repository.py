@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.ports.member_repository import MemberRepository
 from app.domain.entities.member import Member
 from app.domain.value_objects.locale import Locale
+from app.domain.value_objects.role_name import RoleName
 from app.infrastructure.database.models import UserModel, UserRoleModel
 
 
@@ -48,7 +49,7 @@ class SqlaMemberRepository(MemberRepository):
     async def create(self, member: Member) -> Member:
         model = _entity_to_model(member)
         self._session.add(model)
-        role = UserRoleModel(user_id=member.id, role_name="member")
+        role = UserRoleModel(user_id=member.id, role_name=RoleName.MEMBER, organization_id=None)
         self._session.add(role)
         await self._session.flush()
         return _model_to_entity(model)
@@ -97,4 +98,25 @@ class SqlaMemberRepository(MemberRepository):
 
             raise NotFoundError(message=f"Member {member_id} not found")  # type: ignore[misc]
         await self._session.delete(model)
+        await self._session.flush()
+
+    async def has_org_role(self, user_id: UUID, org_id: UUID, role_name: RoleName) -> bool:
+        result = await self._session.execute(
+            select(
+                exists().where(
+                    UserRoleModel.user_id == user_id,
+                    UserRoleModel.organization_id == org_id,
+                    UserRoleModel.role_name == role_name,
+                )
+            )
+        )
+        return bool(result.scalar())
+
+    async def assign_org_role(self, user_id: UUID, org_id: UUID, role_name: RoleName) -> None:
+        role = UserRoleModel(
+            user_id=user_id,
+            organization_id=org_id,
+            role_name=role_name,
+        )
+        self._session.add(role)
         await self._session.flush()

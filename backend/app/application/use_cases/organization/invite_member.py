@@ -7,7 +7,8 @@ from uuid import UUID
 from app.application.ports.email_sender import EmailSender
 from app.application.ports.member_repository import MemberRepository
 from app.domain.value_objects.email import Email
-from app.lib.errors import DomainError, NotFoundError, ValidationError
+from app.domain.value_objects.role_name import RoleName
+from app.lib.errors import DomainError, ForbiddenError, ValidationError
 from app.lib.result import Err, Ok, Result
 
 
@@ -22,15 +23,23 @@ class InviteMember:
         self._member_repo = member_repo
         self._email_sender = email_sender
 
-    async def execute(self, org_id: UUID, email: str) -> Result[None, DomainError]:
+    async def execute(
+        self, org_id: UUID, email: str, caller_id: UUID
+    ) -> Result[None, DomainError]:
         try:
             email_vo = Email.create(email)
         except ValueError as exc:
             return Err(ValidationError(message=str(exc)))
 
+        has_admin = await self._member_repo.has_org_role(caller_id, org_id, RoleName.ORG_ADMIN)
+        if not has_admin:
+            return Err(ForbiddenError(message="Only organization admins can invite members."))
+
         member = await self._member_repo.get_by_email(email_vo.value)
         if member is None:
-            return Err(NotFoundError(message="No member found with that email address."))
+            # Return Ok to prevent email enumeration: callers cannot distinguish
+            # between "no account found" and "invite sent".
+            return Ok(None)
 
         await self._email_sender.send(
             to=member.email,

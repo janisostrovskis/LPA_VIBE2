@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from uuid import UUID
 
 from app.domain.entities.member import Member
+from app.domain.value_objects.role_name import RoleName
 
 
 class MemberRepository(ABC):
@@ -25,3 +26,9 @@ class MemberRepository(ABC):
 
     @abstractmethod
     async def delete(self, member_id: UUID) -> None: ...
+
+    @abstractmethod
+    async def has_org_role(self, user_id: UUID, org_id: UUID, role_name: RoleName) -> bool: ...
+
+    @abstractmethod
+    async def assign_org_role(self, user_id: UUID, org_id: UUID, role_name: RoleName) -> None: ...

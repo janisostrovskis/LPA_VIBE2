@@ -84,9 +84,14 @@ async def verify_magic_link(
     body: MagicLinkVerifyRequest,
     magic_link_repo: Annotated[MagicLinkRepository, Depends(get_magic_link_repo)],
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
+    member_repo: Annotated[MemberRepository, Depends(get_member_repo)],
 ) -> TokenResponse:
     """Consume a magic-link token and return a JWT on success."""
-    use_case = VerifyMagicLink(magic_link_repo=magic_link_repo, auth_service=auth_service)
+    use_case = VerifyMagicLink(
+        magic_link_repo=magic_link_repo,
+        auth_service=auth_service,
+        member_repo=member_repo,
+    )
     result = await use_case.execute(body)
     return result_to_response(result)
 
@@ -95,8 +100,9 @@ async def verify_magic_link(
 async def refresh_token(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer)],
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
+    member_repo: Annotated[MemberRepository, Depends(get_member_repo)],
 ) -> TokenResponse:
     """Refresh an existing JWT, returning a new token with the same subject."""
-    use_case = RefreshToken(auth_service=auth_service)
+    use_case = RefreshToken(auth_service=auth_service, member_repo=member_repo)
     result = await use_case.execute(credentials.credentials)
     return result_to_response(result)

@@ -36,5 +36,8 @@ class LoginWithPassword:
         if not self._verify_fn(dto.password, member.password_hash):
             return Err(InvalidCredentialsError(message="Invalid credentials."))
 
+        if not member.is_active:
+            return Err(InvalidCredentialsError(message="Invalid credentials."))
+
         token = self._auth_service.issue_token(str(member.id))
         return Ok(TokenResponse(access_token=token))

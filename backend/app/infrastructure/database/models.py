@@ -89,20 +89,58 @@ class OrganizationModel(Base):
 
 
 class UserRoleModel(Base):
-    """Many-to-many: user ↔ role.  Maps to the ``user_roles`` join table.
+    """Many-to-many: user ↔ role, optionally scoped to an organization.
+
+    Maps to the ``user_roles`` table.
 
     Valid ``role_name`` values: "member", "org_admin", "content_editor",
     "reviewer", "site_admin".
+
+    ``organization_id`` is NULL for site-wide roles (e.g. the "member" role
+    assigned at registration) and non-NULL for org-scoped roles such as
+    "org_admin" for a specific organization.
     """
 
     __tablename__ = "user_roles"
+    __table_args__ = (
+        # Org-scoped uniqueness: one role per user per org (WHERE org IS NOT NULL).
+        # Both uniqueness constraints are partial indexes; SQLAlchemy UniqueConstraint
+        # does not support WHERE clauses, so we use Index with unique=True throughout.
+        Index(
+            "uq_user_roles_scoped",
+            "user_id",
+            "role_name",
+            "organization_id",
+            unique=True,
+            postgresql_where="organization_id IS NOT NULL",
+        ),
+        # Site-wide uniqueness: one global role per user (WHERE org IS NULL).
+        Index(
+            "uq_user_roles_global",
+            "user_id",
+            "role_name",
+            unique=True,
+            postgresql_where="organization_id IS NULL",
+        ),
+        Index("ix_user_roles_organization_id", "organization_id"),
+    )
 
+    id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
     user_id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
-        primary_key=True,
+        nullable=False,
     )
-    role_name: Mapped[str] = mapped_column(String(50), primary_key=True)
+    role_name: Mapped[str] = mapped_column(String(50), nullable=False)
+    organization_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("organizations.id", ondelete="CASCADE"),
+        nullable=True,
+    )
 
     user: Mapped[UserModel] = relationship("UserModel", back_populates="roles")
 

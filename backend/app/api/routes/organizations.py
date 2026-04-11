@@ -27,11 +27,12 @@ router = APIRouter(prefix="/api/organizations", tags=["organizations"])
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=OrganizationDto)
 async def create_organization(
     body: OrganizationCreateBody,
-    _member_id: Annotated[UUID, Depends(require_member_id)],
+    member_id: Annotated[UUID, Depends(require_member_id)],
     org_repo: Annotated[OrganizationRepository, Depends(get_org_repo)],
+    member_repo: Annotated[MemberRepository, Depends(get_member_repo)],
 ) -> OrganizationDto:
-    """Create a new LPA organization. Caller must be authenticated."""
-    use_case = CreateOrganization(org_repo=org_repo)
+    """Create a new LPA organization. Caller is assigned as org_admin."""
+    use_case = CreateOrganization(org_repo=org_repo, member_repo=member_repo)
     result = await use_case.execute(
         legal_name=body.legal_name,
         registration_number=body.registration_number,
@@ -39,6 +40,7 @@ async def create_organization(
         contact_email=body.contact_email,
         contact_person_name=body.contact_person_name,
         vat_number=body.vat_number,
+        creator_id=member_id,
     )
     org = result_to_response(result, success_status=status.HTTP_201_CREATED)
     return OrganizationDto.from_entity(org)
@@ -48,11 +50,11 @@ async def create_organization(
 async def invite_member(
     org_id: UUID,
     body: InviteMemberBody,
-    _member_id: Annotated[UUID, Depends(require_member_id)],
+    member_id: Annotated[UUID, Depends(require_member_id)],
     member_repo: Annotated[MemberRepository, Depends(get_member_repo)],
     email_sender: Annotated[EmailSender, Depends(get_email_sender)],
 ) -> None:
-    """Invite an existing member to the specified organization."""
+    """Invite an existing member to the specified organization. Caller must be org_admin."""
     use_case = InviteMember(member_repo=member_repo, email_sender=email_sender)
-    result = await use_case.execute(org_id=org_id, email=body.email)
+    result = await use_case.execute(org_id=org_id, email=body.email, caller_id=member_id)
     result_to_response(result, success_status=status.HTTP_204_NO_CONTENT)
