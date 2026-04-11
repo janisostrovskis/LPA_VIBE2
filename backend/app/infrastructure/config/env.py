@@ -7,7 +7,7 @@ to raise pydantic.ValidationError with a clear per-field error.
 from enum import StrEnum
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -30,7 +30,9 @@ class Settings(BaseSettings):  # type: ignore[explicit-any]
     """Application settings loaded from environment variables.
 
     Required: DATABASE_URL.
-    Optional with defaults: BACKEND_PORT (8000), ENVIRONMENT (development), LPA_LOG_LEVEL (INFO).
+    Optional with defaults: BACKEND_PORT (8000), ENVIRONMENT (development),
+    LPA_LOG_LEVEL (INFO), EMAIL_BACKEND (stub), AWS_DEFAULT_REGION (eu-north-1).
+    Conditional: SES_FROM_EMAIL (required when EMAIL_BACKEND=ses).
     """
 
     database_url: str = Field(
@@ -55,6 +57,31 @@ class Settings(BaseSettings):  # type: ignore[explicit-any]
         alias="LPA_LOG_LEVEL",
         description="Root logger level. Matches the env var app/lib/logger.py reads.",
     )
+
+    email_backend: str = Field(
+        default="stub",
+        alias="EMAIL_BACKEND",
+        pattern=r"^(stub|ses)$",
+        description="Email sending backend: 'stub' (logs only) or 'ses' (Amazon SES).",
+    )
+    ses_from_email: str | None = Field(
+        default=None,
+        alias="SES_FROM_EMAIL",
+        description="Verified SES sender email. Required when EMAIL_BACKEND=ses.",
+    )
+    aws_default_region: str = Field(
+        default="eu-north-1",
+        alias="AWS_DEFAULT_REGION",
+        description="AWS region for SES. Defaults to eu-north-1 (Stockholm, closest to Latvia).",
+    )
+
+    @model_validator(mode="after")
+    def _validate_ses_config(self) -> "Settings":
+        if self.email_backend == "ses" and not self.ses_from_email:
+            raise ValueError(
+                "SES_FROM_EMAIL is required when EMAIL_BACKEND=ses"
+            )
+        return self
 
     model_config = SettingsConfigDict(
         env_file=".env",

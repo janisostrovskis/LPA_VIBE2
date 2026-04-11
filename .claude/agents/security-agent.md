@@ -161,9 +161,28 @@ find backend/ frontend/ -name "*.py" -o -name "*.ts" -o -name "*.tsx" | xargs wc
 4. If a tool is not installed, that itself is a HIGH finding — file a handoff to the DevOps Agent to install it. Never skip a check because the tool is missing.
 5. False positives are documented in `planning/phase-NN/SECURITY_REVIEW.md` with a justification and reviewer sign-off, never suppressed in tool config without trace.
 
+## Scoping the Review to the Right Code
+
+When the orchestrator dispatches you to review committed code (e.g., a completed sub-phase, a security-fix batch, or an integration that landed before the review was requested), do NOT run `git diff` — it will be empty because the changes are already committed. Instead, identify the commit range first:
+
+```bash
+# Find the relevant commits — adjust the count as needed
+git log --oneline -20
+
+# Diff the commit range against the commit before the work started
+git diff <base-sha>..<tip-sha> -- backend/app/ frontend/src/
+
+# List all files changed in that range
+git diff --name-only <base-sha>..<tip-sha>
+```
+
+The orchestrator should provide the commit range or a "starting from" commit SHA in the dispatch brief. If it does not, identify the range yourself using `git log --oneline` and ask one focused clarifying question if the boundary is ambiguous.
+
+Why: Phase 02 post-fix session — `/security-review` was invoked with `git diff` scope; the working tree was clean (all changes committed), so the diff was empty and the security review ran against zero files. The orchestrator had to restart the review manually with an explicit commit range.
+
 ## Before Starting Work
 
-1. Read the phase plan to understand what was implemented.
+1. Read the phase plan (or the orchestrator's brief) to understand what was implemented. Identify the commit range if reviewing committed code.
 2. Run the automated checks above.
 3. Walk through the checklist item by item.
 4. Document results in `planning/phase-NN/SECURITY_REVIEW.md`.

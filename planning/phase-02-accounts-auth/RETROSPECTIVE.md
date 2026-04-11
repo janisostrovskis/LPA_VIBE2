@@ -182,6 +182,53 @@ All 7 handoffs reported PASS. However, every handoff except 02b required at leas
 
 ---
 
+---
+
+## Addendum — Post-Close Session (2026-04-11)
+
+A follow-on session after Phase 02 formal close delivered:
+- Security-finding remediations (4 findings: org invite auth, magic link enumeration, org ownership, JWT refresh is_active check)
+- Amazon SES email adapter integration
+- Simplify fixes found during that session (RoleName enum, type:ignore cleanup, validation ordering in invite_member)
+
+Three additional friction patterns were identified and process documents were amended.
+
+### FA1 — `/security-review` ran against an empty diff
+
+**Symptom:** `/security-review` was invoked after all changes were already committed. The slash command runs `git diff` internally, which returned nothing on a clean working tree. The review report covered zero files. The user had to re-invoke with an explicit instruction to look at committed Phase 2 code.
+
+**Root cause:** The `/security-review` slash command is not project-defined — it uses the working-tree diff as its scope. No rule existed telling the orchestrator to pass a commit range to security-agent when reviewing already-committed work.
+
+**Classification:** Systemic — any time the orchestrator schedules a security review after (rather than before) a commit, this will recur. The pattern of committing first and reviewing second is common in ad-hoc fix sessions.
+
+**Fix applied:** Added a "Scoping the Review to the Right Code" section to `.claude/agents/security-agent.md` documenting how to use `git diff <base>..<tip>` when the working tree is clean, and instructing the orchestrator to pass the commit range in the dispatch brief.
+
+---
+
+### FA2 — Docker port conflicts required two failed `docker compose up` attempts
+
+**Symptom:** `/dev` built and started Docker Compose without first checking whether ports 5432 and 3000 were free. Both were in use (local PostgreSQL on 5432, another server on 3000). The command failed twice; ports were manually remapped between attempts.
+
+**Root cause:** The `/dev` command's build step ran before any port-conflict check. The command's summary also hardcoded the ports instead of reflecting actual (possibly remapped) host ports.
+
+**Classification:** Systemic — the user regularly develops with a local PostgreSQL instance running. Port 5432 will almost always be occupied on this machine. Port 3000 is commonly used by other dev servers.
+
+**Fix applied:** Added a step 3 "Port conflict check" to `.claude/commands/dev.md` instructing the command to probe ports 5432, 3000, and 8001 with `lsof` before starting Docker, and remap host-side ports in `docker-compose.yml` if any conflict is detected. Updated the report step to use actual (possibly remapped) port values.
+
+---
+
+### FA3 — Ad-hoc work close sequence skipped until user prompted
+
+**Symptom:** After completing the security-fix batch (4 findings) and the SES integration, neither simplify nor security review nor efficiency retrospective was run. The user had to explicitly ask "was the agentic flow implemented with simplify, security and efficiency?" When simplify was then run, it found real issues (stringly-typed role names, unnecessary type:ignore, validation ordering).
+
+**Root cause:** The "After completing a phase" close sequence in `CLAUDE.md` is framed as a phase-level obligation. Ad-hoc work that does not map to a formal sub-phase has no documented close requirement, so the orchestrator treated it as optional.
+
+**Classification:** Systemic — ad-hoc fix sessions and mid-cycle integrations will recur throughout the project. The omission of simplify resulted in real code quality issues landing without review.
+
+**Fix applied:** Added a new "After completing ad-hoc work" section to `CLAUDE.md` immediately after the phase close sequence, documenting that any committed batch of code changes — regardless of whether it is a formal sub-phase — requires simplify + security-agent review + test confirmation before moving on.
+
+---
+
 ## 5. Phase 03 Readiness
 
 All functional deliverables are in place. No blocking process gaps remain for Phase 03 start, with one note:

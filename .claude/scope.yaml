@@ -54,6 +54,7 @@ agents:
       - "backend/app/domain/events/**"
       - "backend/app/domain/errors/**"
       - "backend/app/infrastructure/auth/**"
+      - "backend/app/infrastructure/email/**"
       - "backend/app/api/**"
       - "backend/app/lib/**"
       - "backend/tests/__init__.py"

@@ -142,6 +142,19 @@ Why: Phase 01b H2 used bare `cd frontend && npm install`. A later hook invoked `
 4. Invoke the **Efficiency Agent** to retrospect on the phase. Apply any process amendments it produces.
 5. **All four must pass before starting the next phase.** No exceptions.
 
+### After completing ad-hoc work (security fixes, integrations, patches outside a formal sub-phase)
+
+Any batch of code changes committed outside a formal sub-phase plan — such as a security-finding remediation batch or a mid-cycle integration — still requires the same close sequence, applied proportionally:
+
+1. Run simplify on all files changed in the batch. Fix all findings.
+2. Dispatch security-agent to audit the changed commit range (pass the base and tip SHAs explicitly in the brief — the working tree is clean, so `git diff` yields nothing). Security agent must identify the range via `git diff <base>..<tip>`.
+3. Invoke Efficiency Agent if any friction pattern emerged during the batch.
+4. All tests must be green before moving on.
+
+The close sequence does not require a formal `TESTING_GATE.md` or `SECURITY_REVIEW.md` file for ad-hoc patches — the security-agent's output and a test-pass confirmation in the session are sufficient. What is NOT optional is running the sequence at all.
+
+Why: Phase 02 post-close session — security fixes and SES integration were completed without running simplify, security review, or efficiency retrospective. The user had to ask explicitly. The fixes had real simplify findings (RoleName enum, type:ignore cleanup, validation ordering) that were only caught after the prompt.
+
 ### Subagent dispatch preamble
 
 Every execution brief sent to a shipping agent (frontend, backend, database, payments, devops, security, i18n) MUST begin with the following sentence verbatim, on its own line, in bold:
