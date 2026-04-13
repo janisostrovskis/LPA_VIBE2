@@ -1,3 +1,14 @@
+x-backend-env: &backend-env
+  # Libpq-compatible scheme (NOT the SQLAlchemy `postgresql+psycopg://` form,
+  # which raw psycopg/libpq does not parse). The backend env loader in 00e
+  # will derive the SQLAlchemy engine URL from this value.
+  DATABASE_URL: ${DATABASE_URL:-postgresql://lpa:lpa@db:5432/lpa}  # pragma: allowlist secret
+  REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+  CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
+  RATE_LIMIT_REDIS_URL: ${RATE_LIMIT_REDIS_URL:-redis://redis:6379/1}
+  RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
+  TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-0}
+
 services:
   db:
     image: postgres:16-alpine
@@ -17,21 +28,50 @@ services:
       retries: 10
     restart: "no"
 
+  redis:
+    image: redis:7-alpine
+    container_name: lpa-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: "no"
+
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: lpa-backend
     environment:
-      # Libpq-compatible scheme (NOT the SQLAlchemy `postgresql+psycopg://` form,
-      # which raw psycopg/libpq does not parse). The backend env loader in 00e
-      # will derive the SQLAlchemy engine URL from this value.
-      DATABASE_URL: ${DATABASE_URL:-postgresql://lpa:lpa@db:5432/lpa}  # pragma: allowlist secret
+      <<: *backend-env
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     ports:
       - "8001:8000"
+    volumes:
+      - ./backend:/app
+    restart: "no"
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: lpa-worker
+    command: celery -A app.infrastructure.tasks.celery_app worker --loglevel=info --concurrency=2
+    environment:
+      <<: *backend-env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - ./backend:/app
     restart: "no"
@@ -64,3 +104,5 @@ services:
 volumes:
   lpa-db-data:
     name: lpa-db-data
+  redis_data:
+    name: lpa-redis-data

@@ -15,6 +15,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.ports.auth_service import AuthService
+from app.application.ports.email_queue import EmailQueue
 from app.application.ports.email_sender import EmailSender
 from app.application.ports.magic_link_repository import MagicLinkRepository
 from app.application.ports.member_repository import MemberRepository
@@ -61,6 +62,19 @@ def get_auth_service() -> AuthService:
     """
     secret = os.environ.get("JWT_SECRET", _DEFAULT_JWT_SECRET)
     return JWTService(secret=secret, expiry_minutes=_JWT_EXPIRY_MINUTES)
+
+
+@lru_cache(maxsize=1)
+def get_email_queue() -> EmailQueue:
+    """Return a cached CeleryEmailQueue singleton.
+
+    CeleryEmailQueue is stateless, so caching avoids repeated object
+    creation. The underlying Celery app is module-level, so no per-request
+    state is shared.
+    """
+    from app.infrastructure.tasks.celery_email_queue import CeleryEmailQueue
+
+    return CeleryEmailQueue()
 
 
 @lru_cache(maxsize=1)

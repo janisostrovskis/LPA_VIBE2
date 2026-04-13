@@ -6,10 +6,9 @@ from datetime import UTC, datetime
 
 from app.application.dto.auth_dto import TokenResponse
 from app.application.ports.auth_service import AuthService
-from app.application.ports.email_sender import EmailSender
+from app.application.ports.email_queue import EmailQueue
 from app.application.ports.magic_link_repository import MagicLinkRepository
 from app.application.ports.member_repository import MemberRepository
-from app.application.services.activation_email import send_activation_email
 from app.domain.errors.auth_error import ActivationTokenInvalidError
 from app.domain.rules.auth_rules import is_magic_link_expired
 from app.domain.value_objects.magic_link_purpose import MagicLinkPurpose
@@ -66,41 +65,32 @@ class ResendActivation:
     """Send a fresh activation email if the account exists and is not yet activated.
 
     Always returns Ok(None) regardless — prevents email enumeration.
+    The activation email is enqueued to a Celery worker so the expensive DB
+    writes and SMTP round-trip happen off the request path. The slow branch
+    still pays a microsecond-level Redis RPUSH that the fast branch skips;
+    this residual µs-scale asymmetry is not a usable oracle when combined
+    with the per-IP rate limits on /resend-activation (3/minute, 10/hour).
     """
 
     def __init__(
         self,
         member_repo: MemberRepository,
-        magic_link_repo: MagicLinkRepository,
-        email_sender: EmailSender,
+        email_queue: EmailQueue,
         frontend_url: str,
     ) -> None:
         self._member_repo = member_repo
-        self._magic_link_repo = magic_link_repo
-        self._email_sender = email_sender
+        self._email_queue = email_queue
         self._frontend_url = frontend_url
 
     async def execute(self, email: str) -> Result[None, DomainError]:
-        # SECURITY NOTE (Phase 02 post-close finding, MEDIUM, accepted):
-        # This handler is not constant-time across the "exists & inactive"
-        # vs "missing / already active" branches. The slow path performs a
-        # token invalidate + insert + email send; the fast path does none
-        # of those. A precise timing-oracle attacker can distinguish.
-        # Mitigation: per-IP rate limiting at the edge (Phase 09), plus
-        # moving the slow-path work onto a background worker with its own
-        # DB session once a task queue (Celery/RQ) lands. A simple
-        # asyncio.create_task does not work here because the SQLAlchemy
-        # session is request-scoped and closes when the handler returns.
         member = await self._member_repo.get_by_email(email.strip().lower())
         if member is None or member.is_active:
             return Ok(None)
 
-        await send_activation_email(
-            magic_link_repo=self._magic_link_repo,
-            email_sender=self._email_sender,
+        self._email_queue.enqueue_send_activation(
             user_id=member.id,
             email=member.email,
-            locale=str(member.preferred_locale),
+            locale=member.preferred_locale.value,
             frontend_url=self._frontend_url,
             welcome=False,
         )

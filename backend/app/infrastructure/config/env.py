@@ -75,11 +75,47 @@ class Settings(BaseSettings):  # type: ignore[explicit-any]
         description="AWS region for SES. Defaults to eu-north-1 (Stockholm, closest to Latvia).",
     )
 
+    redis_url: str = Field(
+        default="redis://redis:6379/0",
+        alias="REDIS_URL",
+        description="Redis connection URL for general application use.",
+    )
+    celery_broker_url: str = Field(
+        default="redis://redis:6379/0",
+        alias="CELERY_BROKER_URL",
+        description="Celery broker URL (Redis). Used by the email queue worker.",
+    )
+    rate_limit_redis_url: str = Field(
+        default="redis://redis:6379/1",
+        alias="RATE_LIMIT_REDIS_URL",
+        description="Dedicated Redis DB for slowapi rate-limit counters.",
+    )
+    rate_limit_enabled: bool = Field(
+        default=True,
+        alias="RATE_LIMIT_ENABLED",
+        description="Enable per-IP rate limiting on auth endpoints. Must be true in production.",
+    )
+    trusted_proxy_hops: int = Field(
+        default=0,
+        alias="TRUSTED_PROXY_HOPS",
+        ge=0,
+        description="Number of trusted reverse-proxy hops in front of the app. "
+        "When > 0, the leftmost X-Forwarded-For entry is used as the client IP.",
+    )
+
     @model_validator(mode="after")
     def _validate_ses_config(self) -> "Settings":
         if self.email_backend == "ses" and not self.ses_from_email:
             raise ValueError(
                 "SES_FROM_EMAIL is required when EMAIL_BACKEND=ses"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _validate_rate_limit_in_prod(self) -> "Settings":
+        if self.environment is Environment.PRODUCTION and not self.rate_limit_enabled:
+            raise ValueError(
+                "RATE_LIMIT_ENABLED must be true in production environment"
             )
         return self
 

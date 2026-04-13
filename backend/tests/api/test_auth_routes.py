@@ -11,6 +11,7 @@ from httpx import ASGITransport, AsyncClient
 
 from app.api.dependencies import (
     get_auth_service,
+    get_email_queue,
     get_email_sender,
     get_magic_link_repo,
     get_member_repo,
@@ -22,6 +23,7 @@ from app.domain.errors.auth_error import EmailAlreadyRegisteredError, InvalidCre
 from app.domain.value_objects.locale import Locale
 from app.lib.result import Err, Ok
 from app.main import app
+from tests.application._doubles.email_queue import FakeEmailQueue
 
 
 def _make_member(email: str = "user@example.com") -> Member:
@@ -65,12 +67,10 @@ async def test_register_success() -> None:
     member_repo = AsyncMock(spec=MemberRepository)
     member_repo.get_by_email.return_value = None
     member_repo.create.side_effect = lambda m: m
-    magic_link_repo = AsyncMock()
-    email_sender = AsyncMock()
+    fake_queue = FakeEmailQueue()
 
     app.dependency_overrides[get_member_repo] = lambda: member_repo
-    app.dependency_overrides[get_magic_link_repo] = lambda: magic_link_repo
-    app.dependency_overrides[get_email_sender] = lambda: email_sender
+    app.dependency_overrides[get_email_queue] = lambda: fake_queue
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.post(
@@ -86,23 +86,19 @@ async def test_register_success() -> None:
     data = response.json()
     assert data["email"] == "new@example.com"
     assert data["display_name"] == "Alice"
-    # Activation email must have been sent
-    email_sender.send.assert_called_once()
-    # Magic link token must have been created with purpose="activation"
-    magic_link_repo.create.assert_called_once()
-    assert magic_link_repo.create.call_args.kwargs.get("purpose") == "activation"
+    # Activation email must have been enqueued
+    assert len(fake_queue.calls) == 1
+    assert fake_queue.calls[0]["email"] == "new@example.com"
+    assert fake_queue.calls[0]["welcome"] is True
 
 
 @pytest.mark.asyncio
 async def test_register_duplicate_email() -> None:
     member_repo = AsyncMock(spec=MemberRepository)
     member_repo.get_by_email.return_value = _make_member("existing@example.com")
-    magic_link_repo = AsyncMock()
-    email_sender = AsyncMock()
 
     app.dependency_overrides[get_member_repo] = lambda: member_repo
-    app.dependency_overrides[get_magic_link_repo] = lambda: magic_link_repo
-    app.dependency_overrides[get_email_sender] = lambda: email_sender
+    app.dependency_overrides[get_email_queue] = lambda: FakeEmailQueue()
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.post(
@@ -191,3 +187,20 @@ async def test_login_unknown_email() -> None:
         )
 
     assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_resend_activation_returns_204() -> None:
+    member_repo = AsyncMock(spec=MemberRepository)
+    member_repo.get_by_email.return_value = None  # email-enum safe: always 204
+
+    app.dependency_overrides[get_member_repo] = lambda: member_repo
+    app.dependency_overrides[get_email_queue] = lambda: FakeEmailQueue()
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.post(
+            "/api/auth/resend-activation",
+            json={"email": "nobody@example.com"},
+        )
+
+    assert response.status_code == 204

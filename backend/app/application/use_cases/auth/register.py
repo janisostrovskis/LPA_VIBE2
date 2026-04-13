@@ -7,10 +7,8 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from app.application.dto.member_dto import MemberCreateDto, MemberDto
-from app.application.ports.email_sender import EmailSender
-from app.application.ports.magic_link_repository import MagicLinkRepository
+from app.application.ports.email_queue import EmailQueue
 from app.application.ports.member_repository import MemberRepository
-from app.application.services.activation_email import send_activation_email
 from app.domain.entities.member import Member
 from app.domain.errors.auth_error import EmailAlreadyRegisteredError, WeakPasswordError
 from app.domain.rules.auth_rules import validate_password_strength
@@ -24,21 +22,21 @@ class RegisterMember:
     """Register a new member with email + password.
 
     The member is created with ``is_active=False``.  An activation email is
-    sent immediately so the member can confirm their address before logging in.
+    enqueued immediately so the member can confirm their address before
+    logging in. The email is sent asynchronously by the Celery worker so
+    this use case returns quickly regardless of email delivery latency.
     """
 
     def __init__(
         self,
         member_repo: MemberRepository,
         hash_fn: Callable[[str], str],
-        magic_link_repo: MagicLinkRepository,
-        email_sender: EmailSender,
+        email_queue: EmailQueue,
         frontend_url: str,
     ) -> None:
         self._member_repo = member_repo
         self._hash_fn = hash_fn
-        self._magic_link_repo = magic_link_repo
-        self._email_sender = email_sender
+        self._email_queue = email_queue
         self._frontend_url = frontend_url
 
     async def execute(self, dto: MemberCreateDto) -> Result[MemberDto, DomainError]:
@@ -73,9 +71,7 @@ class RegisterMember:
         )
         created = await self._member_repo.create(member)
 
-        await send_activation_email(
-            magic_link_repo=self._magic_link_repo,
-            email_sender=self._email_sender,
+        self._email_queue.enqueue_send_activation(
             user_id=created.id,
             email=created.email,
             locale=locale.value,

@@ -1,8 +1,17 @@
 """Shared helper: generate an activation token and send the activation email.
 
-Both ``RegisterMember`` and ``ResendActivation`` build the same token and
-email body; this helper is the single source of truth so the two flows
-cannot drift apart.
+Runs only inside the Celery worker task so the token write + email send stay
+off the request path — otherwise the DB writes and SMTP round-trip leak timing
+information about whether an email is associated with an existing inactive
+account.
+
+Concurrency note: ``invalidate_unused_for_user`` then ``create`` is "last writer
+wins" across concurrent tasks. If a user triggers a resend while an earlier
+send is still retrying, the retry can invalidate the token the user just
+received. This manifests as a rare "invalid token" click-through; acceptable
+because (a) the user can request another resend, (b) rate limits cap retry
+pressure, and (c) the fix is a larger refactor (pass the token into the task
+payload so retries reuse instead of regenerating).
 """
 
 from __future__ import annotations
