@@ -46,4 +46,7 @@ def result_to_response[T](result: Result[T, DomainError], success_status: int = 
         return result.value
     error = result.error
     http_status = _domain_error_status(error)
-    raise HTTPException(status_code=http_status, detail=error.message)
+    raise HTTPException(
+        status_code=http_status,
+        detail={"code": type(error).code, "message": error.message},
+    )

@@ -53,7 +53,18 @@
     "noAccount": "No account?",
     "haveAccount": "Already have an account?",
     "passwordTooShort": "Password must be at least 8 characters.",
-    "passwordHint": "At least 8 characters, one uppercase letter, one digit"
+    "passwordHint": "At least 8 characters, one uppercase letter, one digit",
+    "checkEmail": "Check your email",
+    "emailSentTo": "We sent an activation link to:",
+    "didntReceiveEmail": "Didn't receive the email?",
+    "resendActivation": "Resend activation",
+    "resendSuccess": "Email sent",
+    "activating": "Activating...",
+    "activationSuccess": "Account activated! Redirecting...",
+    "activationFailed": "Activation failed",
+    "activationTokenInvalid": "Invalid or already-used activation link",
+    "accountNotActivated": "Account not yet activated. Check your email.",
+    "goToLogin": "Back to login"
   },
   "pages": {
     "home": {

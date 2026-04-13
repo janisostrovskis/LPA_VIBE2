@@ -8,6 +8,7 @@ trainings, certification, directory, payments) depends on user accounts and
 authentication being in place.
 
 Per `planning/MASTER_PLAN.md` Phase 2 definition (lines 287-303):
+
 > Users and organizations can register, log in, manage profiles. Role system
 > enforced. Admin route protection in place.
 
@@ -19,6 +20,7 @@ first time.
 ## Scope (from Master Plan + Business Case Section 3.1)
 
 **Must deliver:**
+
 1. Database schema — User, Organization, Role, MagicLinkToken tables
 2. Domain entities — Member, Organization; value objects Email, Locale, Role
 3. Auth infrastructure — JWT token issuance/validation, magic link flow, password hashing
@@ -29,6 +31,7 @@ first time.
 8. GDPR — data export endpoint (`GET /api/members/me/export`)
 
 **Not in scope (deferred to later phases):**
+
 - Membership types and payments (Phase 3)
 - Training registration (Phase 4)
 - Certification (Phase 5)
@@ -37,21 +40,22 @@ first time.
 
 ## Sub-phases
 
-| Sub-phase | Goal | Owner(s) | Parallel? |
-|-----------|------|----------|-----------|
-| **02a** | DB schema + Alembic migration (User, Org, Role, MagicLinkToken) | database-agent | No |
-| **02b** | Domain entities + value objects + rules | backend-agent | No (needs 02a entities) |
-| **02c** | Infrastructure: repositories, JWT factory, password hashing, email port stub | database-agent (repos) ‖ backend-agent (JWT + email port) | Yes |
-| **02d** | Application use cases: register, login, profile, org management | backend-agent | No (needs 02c) |
-| **02e** | API routes + middleware (auth, CORS, RBAC) | backend-agent | No (needs 02d) |
-| **02f** | Frontend: auth pages, profile, org dashboard, API client | frontend-agent | No (needs 02e API) |
-| **02g** | Integration tests + E2E + close gates | All agents | No |
+| Sub-phase | Goal                                                                         | Owner(s)                                                  | Parallel?               |
+| --------- | ---------------------------------------------------------------------------- | --------------------------------------------------------- | ----------------------- |
+| **02a**   | DB schema + Alembic migration (User, Org, Role, MagicLinkToken)              | database-agent                                            | No                      |
+| **02b**   | Domain entities + value objects + rules                                      | backend-agent                                             | No (needs 02a entities) |
+| **02c**   | Infrastructure: repositories, JWT factory, password hashing, email port stub | database-agent (repos) ‖ backend-agent (JWT + email port) | Yes                     |
+| **02d**   | Application use cases: register, login, profile, org management              | backend-agent                                             | No (needs 02c)          |
+| **02e**   | API routes + middleware (auth, CORS, RBAC)                                   | backend-agent                                             | No (needs 02d)          |
+| **02f**   | Frontend: auth pages, profile, org dashboard, API client                     | frontend-agent                                            | No (needs 02e API)      |
+| **02g**   | Integration tests + E2E + close gates                                        | All agents                                                | No                      |
 
 ## Sub-phase 02a: Database schema + Alembic migration
 
 **Owner:** database-agent (single handoff H1)
 
 **Deliverables:**
+
 - `backend/app/domain/entities/member.py` — Python dataclass: id (UUID), email, display_name, preferred_locale, password_hash (optional — magic link users have none), is_active, created_at, updated_at
 - `backend/app/domain/entities/organization.py` — dataclass: id, legal_name, registration_number, vat_number (optional), address, contact_email, contact_person_name, created_at, updated_at
 - `backend/app/domain/value_objects/email.py` — immutable validated Email VO (regex + lowercase normalization)
@@ -63,6 +67,7 @@ first time.
 - `backend/tests/domain/test_locale_vo.py` — unit tests for Locale enum
 
 **Key constraints:**
+
 - Domain entities are **pure Python dataclasses** — no SQLAlchemy, no Pydantic BaseModel
 - Infrastructure models use SQLAlchemy ORM Mapped[] syntax
 - Roles are string-based: "member", "org_admin", "content_editor", "reviewer", "site_admin"
@@ -71,6 +76,7 @@ first time.
 - Email column: unique, indexed, case-insensitive (use CITEXT or lower() functional index)
 
 **Verification:**
+
 - `(cd backend && python -m pytest tests/domain/)` → 0
 - `(cd backend && docker compose up -d db && alembic upgrade head)` → 0
 - `(cd backend && python -m mypy app/)` → 0
@@ -81,6 +87,7 @@ first time.
 **Owner:** backend-agent (single handoff H1)
 
 **Deliverables:**
+
 - `backend/app/domain/rules/auth_rules.py` — password strength validation, magic link expiry check
 - `backend/app/domain/errors/auth_error.py` — InvalidCredentials, EmailAlreadyRegistered, MagicLinkExpired, InsufficientRole
 - `backend/app/domain/events/member_registered.py` — MemberRegistered domain event
@@ -90,6 +97,7 @@ first time.
 ## Sub-phase 02c: Infrastructure (parallel)
 
 **H1 — database-agent:** Repositories
+
 - `backend/app/infrastructure/database/repositories/member_repository.py` — CRUD + find_by_email
 - `backend/app/infrastructure/database/repositories/organization_repository.py` — CRUD
 - `backend/app/infrastructure/database/repositories/magic_link_repository.py` — create, consume, cleanup_expired
@@ -99,6 +107,7 @@ first time.
 - Integration tests hitting real test PostgreSQL
 
 **H2 — backend-agent:** Auth infrastructure
+
 - `backend/app/infrastructure/auth/jwt_service.py` — issue + validate JWT (HS256, configurable expiry)
 - `backend/app/infrastructure/auth/password_service.py` — bcrypt hash + verify
 - `backend/app/application/ports/auth_service.py` — ABC port for JWT
@@ -110,6 +119,7 @@ first time.
 **Owner:** backend-agent
 
 **Deliverables:**
+
 - `backend/app/application/use_cases/auth/register.py` — RegisterMember use case returning `Result[MemberDto, DomainError]`
 - `backend/app/application/use_cases/auth/login_password.py` — password login returning JWT
 - `backend/app/application/use_cases/auth/login_magic_link.py` — request + consume magic link
@@ -127,6 +137,7 @@ first time.
 **Owner:** backend-agent
 
 **Deliverables:**
+
 - `backend/app/api/routes/auth.py` — POST /register, POST /login, POST /magic-link/request, POST /magic-link/verify, POST /refresh
 - `backend/app/api/routes/members.py` — GET /me, PATCH /me, GET /me/export, GET /{id} (admin)
 - `backend/app/api/routes/organizations.py` — POST /, GET /{id}, PATCH /{id}, POST /{id}/invite
@@ -141,6 +152,7 @@ first time.
 **Owner:** frontend-agent
 
 **Deliverables:**
+
 - `frontend/src/lib/api-client.ts` — typed fetch wrapper for backend API
 - `frontend/src/app/[locale]/(public)/join/page.tsx` — upgrade from placeholder to registration form
 - `frontend/src/app/[locale]/(public)/login/page.tsx` — email + password login, magic link option
@@ -169,13 +181,13 @@ first time.
 
 ## Risks
 
-| # | Risk | Mitigation |
-|---|------|------------|
-| R1 | First backend code — COLA import check may surface unexpected violations | database-agent and backend-agent briefs include explicit layer import rules |
-| R2 | Async SQLAlchemy + Alembic setup is nontrivial | database-agent creates session.py with proven async pattern |
-| R3 | JWT + magic link auth flow is security-critical | Security-agent review at 02g, not just phase close |
-| R4 | Docker Compose needs to be running for integration tests | CI already has service containers; local devs use docker compose |
-| R5 | Frontend API client needs backend running | 02f tests can mock API; E2E in 02g tests against real backend |
+| #   | Risk                                                                     | Mitigation                                                                  |
+| --- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| R1  | First backend code — COLA import check may surface unexpected violations | database-agent and backend-agent briefs include explicit layer import rules |
+| R2  | Async SQLAlchemy + Alembic setup is nontrivial                           | database-agent creates session.py with proven async pattern                 |
+| R3  | JWT + magic link auth flow is security-critical                          | Security-agent review at 02g, not just phase close                          |
+| R4  | Docker Compose needs to be running for integration tests                 | CI already has service containers; local devs use docker compose            |
+| R5  | Frontend API client needs backend running                                | 02f tests can mock API; E2E in 02g tests against real backend               |
 
 ## Verification (end of Phase 02)
 

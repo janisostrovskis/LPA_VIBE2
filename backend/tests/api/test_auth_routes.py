@@ -9,7 +9,12 @@ from uuid import uuid4
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from app.api.dependencies import get_auth_service, get_member_repo
+from app.api.dependencies import (
+    get_auth_service,
+    get_email_sender,
+    get_magic_link_repo,
+    get_member_repo,
+)
 from app.application.ports.auth_service import AuthService
 from app.application.ports.member_repository import MemberRepository
 from app.domain.entities.member import Member
@@ -60,8 +65,12 @@ async def test_register_success() -> None:
     member_repo = AsyncMock(spec=MemberRepository)
     member_repo.get_by_email.return_value = None
     member_repo.create.side_effect = lambda m: m
+    magic_link_repo = AsyncMock()
+    email_sender = AsyncMock()
 
     app.dependency_overrides[get_member_repo] = lambda: member_repo
+    app.dependency_overrides[get_magic_link_repo] = lambda: magic_link_repo
+    app.dependency_overrides[get_email_sender] = lambda: email_sender
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.post(
@@ -77,14 +86,23 @@ async def test_register_success() -> None:
     data = response.json()
     assert data["email"] == "new@example.com"
     assert data["display_name"] == "Alice"
+    # Activation email must have been sent
+    email_sender.send.assert_called_once()
+    # Magic link token must have been created with purpose="activation"
+    magic_link_repo.create.assert_called_once()
+    assert magic_link_repo.create.call_args.kwargs.get("purpose") == "activation"
 
 
 @pytest.mark.asyncio
 async def test_register_duplicate_email() -> None:
     member_repo = AsyncMock(spec=MemberRepository)
     member_repo.get_by_email.return_value = _make_member("existing@example.com")
+    magic_link_repo = AsyncMock()
+    email_sender = AsyncMock()
 
     app.dependency_overrides[get_member_repo] = lambda: member_repo
+    app.dependency_overrides[get_magic_link_repo] = lambda: magic_link_repo
+    app.dependency_overrides[get_email_sender] = lambda: email_sender
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.post(
@@ -97,7 +115,9 @@ async def test_register_duplicate_email() -> None:
         )
 
     assert response.status_code == 409
-    assert "already" in response.json()["detail"].lower()
+    detail = response.json()["detail"]
+    assert detail["code"] == "email_already_registered"
+    assert "already" in detail["message"].lower()
 
 
 @pytest.mark.asyncio

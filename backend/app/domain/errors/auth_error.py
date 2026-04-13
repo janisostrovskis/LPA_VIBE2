@@ -40,3 +40,13 @@ class InsufficientRoleError(ForbiddenError):
 @dataclass(frozen=True)
 class WeakPasswordError(ValidationError):
     code: ClassVar[str] = "weak_password"
+
+
+@dataclass(frozen=True)
+class AccountNotActivatedError(UnauthorizedError):
+    code: ClassVar[str] = "account_not_activated"
+
+
+@dataclass(frozen=True)
+class ActivationTokenInvalidError(ValidationError):
+    code: ClassVar[str] = "activation_token_invalid"

@@ -75,6 +75,17 @@ After completing any code change but before reporting done, you MUST invoke the 
 4. Invoke `simplify` on changed files (see Mandatory Skill Usage above).
 5. Write `HANDOFF COMPLETE: [task] — PASS/FAIL` when done.
 
+## Use Case Constructor Changes — Test Update Obligation
+
+When you add a new port (dependency) to an existing use case's `__init__` signature, you MUST also update every test that instantiates that use case directly with positional or keyword arguments. Failure to do so produces `TypeError` failures at test collection time that are not caught by the use case's own unit tests (they only test the new path).
+
+Procedure:
+1. After finalising the new signature, grep `backend/tests/` for the use case class name: `grep -rn "ClassName(" backend/tests/`.
+2. For every match, add the new dependency as a `MagicMock()` / `AsyncMock()` argument.
+3. Verify by running the full test suite (`pytest tests/application/ tests/api/ -v`) before invoking simplify.
+
+Why: Email-activation batch — `RegisterMember` gained an `EmailPort` dependency; `test_register.py` and `test_auth_routes.py` both instantiated the old signature and failed. Main session had to apply both fixes post-dispatch.
+
 ## Execution vs planning
 
 When the orchestrator dispatches you with an execution brief, **execute directly**. Do not re-plan. Do not write a plan file. Do not present a plan back to the orchestrator for approval. The orchestrator has already planned the work — your job is to do it. If the brief is genuinely ambiguous (e.g., a referenced file doesn't exist, a constraint contradicts another constraint, the verification commands won't run), ask **one focused clarifying question** and stop. Do not free-form propose alternatives. This rule exists because repeated plan-mode entries in Phase 0 sub-phases 00e/00f cost dispatch roundtrips.

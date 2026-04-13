@@ -13,7 +13,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, func
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Index, String, func
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -146,9 +146,30 @@ class UserRoleModel(Base):
 
 
 class MagicLinkTokenModel(Base):
-    """Single-use authentication token sent via email.  Maps to ``magic_link_tokens``."""
+    """Single-use token sent via email.  Maps to ``magic_link_tokens``.
+
+    The ``purpose`` column distinguishes between token types:
+    - ``"login"``      — passwordless sign-in link (original behaviour)
+    - ``"activation"`` — email-address verification at signup
+
+    The partial index on ``(user_id, purpose) WHERE used = false`` lets the
+    consume path look up an unused token by purpose without a full table scan.
+    """
 
     __tablename__ = "magic_link_tokens"
+    __table_args__ = (
+        CheckConstraint(
+            "purpose IN ('login', 'activation')",
+            name="ck_magic_link_tokens_purpose",
+        ),
+        # Partial index: locate unused tokens by user + purpose efficiently.
+        Index(
+            "ix_magic_link_tokens_user_purpose_active",
+            "user_id",
+            "purpose",
+            postgresql_where="used = false",
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True),
@@ -164,6 +185,7 @@ class MagicLinkTokenModel(Base):
     )
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     used: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
+    purpose: Mapped[str] = mapped_column(String(20), nullable=False, server_default="login")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

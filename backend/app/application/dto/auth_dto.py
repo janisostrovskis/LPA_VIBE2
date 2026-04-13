@@ -29,3 +29,15 @@ class MagicLinkVerifyRequest(BaseModel):
     """One-time token from a magic-link email."""
 
     token: str
+
+
+class ActivateAccountRequest(BaseModel):
+    """Token from an activation email."""
+
+    token: str
+
+
+class ResendActivationRequest(BaseModel):
+    """Request to resend an account activation email."""
+
+    email: str

@@ -253,6 +253,39 @@ Source-touching handoffs dated 2026-04-10 or later must:
 
 ---
 
+## 02g-H4 — i18n-agent — 2026-04-11
+
+- **Task:** Add email activation flow translation keys (11 keys under `auth.*`) to all three locale files
+- **Scope (files changed):**
+  - frontend/public/locales/lv/common.json
+  - frontend/public/locales/en/common.json
+  - frontend/public/locales/ru/common.json
+- **Skills invoked:**
+  - `simplify` — PASS
+- **Rule 3 verification:**
+  - `node -e "flatKeys comparison across lv/en/ru"` → exit 0 (EN: complete, RU: complete, LV new keys: all present)
+  - `pre-commit run --files frontend/public/locales/lv/common.json frontend/public/locales/en/common.json frontend/public/locales/ru/common.json` → exit 1 (pre-existing Python 3.8.5 incompatibility in hook scripts — `list[...]`/`set[...]` type alias syntax requires Python 3.9+; confirmed identical failure on baseline before any changes)
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** pre-commit hook failure is pre-existing on this machine (Python 3.8.5 vs scripts using 3.9+ syntax). Baseline confirmed by running pre-commit on stashed (unmodified) files — same exit 1. The locale JSON files themselves are valid JSON (confirmed by node require). Simplify receipt at `planning/phase-02-accounts-auth/simplify-receipts/02g-H4-i18n-agent.md`.
+
+---
+
+## 02g-H5 — database-agent — 2026-04-11
+
+- **Task:** Add `invalidate_unused_for_user` method to MagicLinkRepository port and SQLAlchemy implementation to close stale-token window on resend activation
+- **Scope (files changed):**
+  - backend/app/application/ports/magic_link_repository.py
+  - backend/app/infrastructure/database/repositories/magic_link_repository.py
+- **Skills invoked:**
+  - `simplify` — PASS
+- **Rule 3 verification:**
+  - `ruff check backend/app/application/ports/magic_link_repository.py backend/app/infrastructure/database/repositories/magic_link_repository.py` → exit 0
+  - `pre-commit run --files backend/app/application/ports/magic_link_repository.py backend/app/infrastructure/database/repositories/magic_link_repository.py` → exit 1 (pre-existing Python 3.8.5 system python incompatibility in hook scripts — identical failure on baseline; ruff confirms code is clean)
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** Bulk `UPDATE` statement (single round-trip, no SELECT-then-UPDATE). `update` import added to existing sqlalchemy imports in the implementation file. No migration needed — schema unchanged. pre-commit hook failures are pre-existing environment issue (Python 3.8.5 used by system `python`; scripts require 3.9+ syntax). Simplify receipt at `planning/phase-02-accounts-auth/simplify-receipts/02g-H5-database-agent.md`.
+
+---
+
 ## 02g-H3 — devops-agent — 2026-04-10
 
 - **Task:** Add PyJWT and bcrypt to backend/pyproject.toml runtime dependencies (both were imported by backend code but missing from the declared dep list)

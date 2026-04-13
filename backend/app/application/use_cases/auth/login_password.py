@@ -7,7 +7,7 @@ from collections.abc import Callable
 from app.application.dto.auth_dto import LoginRequest, TokenResponse
 from app.application.ports.auth_service import AuthService
 from app.application.ports.member_repository import MemberRepository
-from app.domain.errors.auth_error import InvalidCredentialsError
+from app.domain.errors.auth_error import AccountNotActivatedError, InvalidCredentialsError
 from app.lib.errors import DomainError
 from app.lib.result import Err, Ok, Result
 
@@ -37,7 +37,7 @@ class LoginWithPassword:
             return Err(InvalidCredentialsError(message="Invalid credentials."))
 
         if not member.is_active:
-            return Err(InvalidCredentialsError(message="Invalid credentials."))
+            return Err(AccountNotActivatedError(message="Account not yet activated. Check your email."))
 
         token = self._auth_service.issue_token(str(member.id))
         return Ok(TokenResponse(access_token=token))

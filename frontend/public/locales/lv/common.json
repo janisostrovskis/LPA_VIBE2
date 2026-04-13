@@ -53,7 +53,18 @@
     "noAccount": "Nav konta?",
     "haveAccount": "Jau ir konts?",
     "passwordTooShort": "Parolei jābūt vismaz 8 simboliem.",
-    "passwordHint": "Vismaz 8 simboli, viens lielais burts, viens cipars"
+    "passwordHint": "Vismaz 8 simboli, viens lielais burts, viens cipars",
+    "checkEmail": "Pārbaudiet savu e-pastu",
+    "emailSentTo": "Mēs nosūtījām aktivizēšanas saiti uz:",
+    "didntReceiveEmail": "Nesaņēmāt e-pastu?",
+    "resendActivation": "Nosūtīt vēlreiz",
+    "resendSuccess": "E-pasts nosūtīts",
+    "activating": "Notiek aktivizēšana...",
+    "activationSuccess": "Konts aktivizēts! Pāradresācija...",
+    "activationFailed": "Aktivizēšana neizdevās",
+    "activationTokenInvalid": "Nederīga vai jau izmantota aktivizēšanas saite",
+    "accountNotActivated": "Konts vēl nav aktivizēts. Pārbaudiet savu e-pastu.",
+    "goToLogin": "Atgriezties uz pieteikšanos"
   },
   "pages": {
     "home": {

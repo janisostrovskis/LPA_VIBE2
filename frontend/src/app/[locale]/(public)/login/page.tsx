@@ -4,7 +4,12 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/lib/auth-context";
-import { requestMagicLink, type ApiError } from "@/lib/api-client";
+import {
+  requestMagicLink,
+  resendActivation,
+  getErrorCode,
+  type ApiError,
+} from "@/lib/api-client";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
@@ -16,7 +21,7 @@ function isApiError(e: unknown): e is ApiError {
     typeof e === "object" &&
     e !== null &&
     "detail" in e &&
-    typeof (e as Record<string, unknown>)["detail"] === "string"
+    "status" in e
   );
 }
 
@@ -42,6 +47,10 @@ function LoginPageContent() {
   const [errors, setErrors] = useState<{ email?: string; password?: string; form?: string }>({});
   const [loading, setLoading] = useState(false);
   const [magicSent, setMagicSent] = useState(false);
+  const [notActivated, setNotActivated] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
+  const [resendCooldownUntil, setResendCooldownUntil] = useState(0);
   const registerSuccess = searchParams.get("registered") === "1";
 
   // Redirect if already authenticated
@@ -65,13 +74,23 @@ function LoginPageContent() {
 
     setLoading(true);
     setErrors({});
+    setNotActivated(false);
+    setResendSuccess(false);
 
     try {
       await login(email, password);
       router.push(`/${locale}/profile`);
     } catch (err: unknown) {
-      const detail = isApiError(err) ? err.detail : t("invalidCredentials");
-      setErrors({ form: detail });
+      if (isApiError(err) && getErrorCode(err) === "account_not_activated") {
+        setNotActivated(true);
+      } else {
+        const detail = isApiError(err)
+          ? typeof err.detail === "object" && err.detail !== null && "message" in err.detail
+            ? String((err.detail as { message: string }).message)
+            : String(err.detail)
+          : t("invalidCredentials");
+        setErrors({ form: detail });
+      }
     } finally {
       setLoading(false);
     }
@@ -91,10 +110,28 @@ function LoginPageContent() {
       await requestMagicLink(email);
       setMagicSent(true);
     } catch (err: unknown) {
-      const detail = isApiError(err) ? err.detail : t("invalidCredentials");
+      const detail = isApiError(err)
+        ? typeof err.detail === "object" && err.detail !== null && "message" in err.detail
+          ? String((err.detail as { message: string }).message)
+          : String(err.detail)
+        : t("invalidCredentials");
       setErrors({ form: detail });
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleResendActivation() {
+    if (!email.trim()) return;
+    if (Date.now() < resendCooldownUntil) return;
+    setResendLoading(true);
+    setResendSuccess(false);
+    try {
+      await resendActivation(email.trim());
+      setResendSuccess(true);
+      setResendCooldownUntil(Date.now() + 30_000);
+    } finally {
+      setResendLoading(false);
     }
   }
 
@@ -133,6 +170,8 @@ function LoginPageContent() {
                 setMode("password");
                 setErrors({});
                 setMagicSent(false);
+                setNotActivated(false);
+                setResendSuccess(false);
               }}
               className={[
                 "flex-1 py-2 font-label text-label-md rounded-pill transition-all duration-200",
@@ -150,6 +189,8 @@ function LoginPageContent() {
                 setMode("magic");
                 setErrors({});
                 setMagicSent(false);
+                setNotActivated(false);
+                setResendSuccess(false);
               }}
               className={[
                 "flex-1 py-2 font-label text-label-md rounded-pill transition-all duration-200",
@@ -186,6 +227,32 @@ function LoginPageContent() {
                   autoComplete="current-password"
                   aria-required="true"
                 />
+
+                {/* Account not activated alert */}
+                {notActivated && (
+                  <div
+                    role="alert"
+                    className="p-lpa-s bg-lpa-secondary-container/30 rounded-lg flex flex-col gap-lpa-xs"
+                  >
+                    <p className="font-body text-body-md text-lpa-on-secondary-container">
+                      {t("accountNotActivated")}
+                    </p>
+                    {resendSuccess ? (
+                      <p role="status" className="font-body text-body-sm text-lpa-secondary">
+                        {t("resendSuccess")}
+                      </p>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="text"
+                        loading={resendLoading}
+                        onClick={() => { void handleResendActivation(); }}
+                      >
+                        {t("resendActivation")}
+                      </Button>
+                    )}
+                  </div>
+                )}
 
                 {errors.form && (
                   <p role="alert" className="text-lpa-error text-body-md">

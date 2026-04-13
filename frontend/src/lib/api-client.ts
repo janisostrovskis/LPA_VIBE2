@@ -1,8 +1,31 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
+/** Structured error detail returned by backend for specific domain errors. */
+export interface ApiErrorDetail {
+  code: string;
+  message: string;
+}
+
 export interface ApiError {
-  detail: string;
+  /** Either a plain string message or a structured domain error. */
+  detail: string | ApiErrorDetail;
   status: number;
+}
+
+/** Narrow an ApiError's detail to its error code, if structured. */
+export function getErrorCode(err: ApiError): string | null {
+  if (typeof err.detail === "object" && err.detail !== null) {
+    return err.detail.code;
+  }
+  return null;
+}
+
+/** Narrow an ApiError's detail to a human-readable string. */
+export function getErrorMessage(err: ApiError): string {
+  if (typeof err.detail === "object" && err.detail !== null) {
+    return err.detail.message;
+  }
+  return err.detail;
 }
 
 export interface MemberDto {
@@ -20,13 +43,30 @@ export interface TokenResponse {
   token_type: string;
 }
 
-function isApiError(value: unknown): value is { detail: string } {
+function isStructuredDetail(
+  value: unknown,
+): value is { code: string; message: string } {
   return (
     typeof value === "object" &&
     value !== null &&
-    "detail" in value &&
-    typeof (value as Record<string, unknown>)["detail"] === "string"
+    "code" in value &&
+    "message" in value &&
+    typeof (value as Record<string, unknown>)["code"] === "string" &&
+    typeof (value as Record<string, unknown>)["message"] === "string"
   );
+}
+
+function parseErrorDetail(body: unknown, fallback: string): string | ApiErrorDetail {
+  if (
+    typeof body === "object" &&
+    body !== null &&
+    "detail" in body
+  ) {
+    const d = (body as Record<string, unknown>)["detail"];
+    if (typeof d === "string") return d;
+    if (isStructuredDetail(d)) return { code: d.code, message: d.message };
+  }
+  return fallback;
 }
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
@@ -43,7 +83,7 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
     const body: unknown = await res.json().catch(() => ({
       detail: res.statusText,
     }));
-    const detail = isApiError(body) ? body.detail : res.statusText;
+    const detail = parseErrorDetail(body, res.statusText);
     throw { detail, status: res.status } as ApiError;
   }
 
@@ -83,6 +123,20 @@ export function verifyMagicLink(token: string): Promise<TokenResponse> {
   return apiFetch<TokenResponse>("/api/auth/magic-link/verify", {
     method: "POST",
     body: JSON.stringify({ token }),
+  });
+}
+
+export function activateAccount(token: string): Promise<TokenResponse> {
+  return apiFetch<TokenResponse>("/api/auth/activate", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+  });
+}
+
+export function resendActivation(email: string): Promise<void> {
+  return apiFetch<void>("/api/auth/resend-activation", {
+    method: "POST",
+    body: JSON.stringify({ email }),
   });
 }
 

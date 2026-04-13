@@ -229,6 +229,44 @@ Three additional friction patterns were identified and process documents were am
 
 ---
 
+## Addendum — Email Activation Batch (2026-04-11)
+
+A follow-on session after the Phase 02 Addendum delivered email-based account activation: verification token generation, email dispatch via the SES adapter, activation endpoint, and resend-with-cooldown logic.
+
+### FB1 — Backend agent adds new port to existing use case; existing tests break
+
+**Symptom:** `RegisterMember` gained a new `EmailPort` dependency. `test_register.py` and `test_auth_routes.py` both instantiated `RegisterMember(...)` with the old positional signature. Both files raised `TypeError` at test collection time. Main session applied both fixes post-dispatch.
+
+**Root cause:** The backend-agent brief scoped the work to the new use case and the modified `RegisterMember`. No instruction told the agent to scan existing tests for direct instantiations of the modified class. The agent updated the use case but did not grep `tests/` for the old call sites.
+
+**Classification:** Systemic — any handoff that extends an existing use case's constructor will hit this pattern. Phase 03 (payment ports) and any future phase that adds an email or notification port will reproduce it. First documented occurrence, but the forward recurrence is certain.
+
+**Cross-platform check:** N/A — process rule, platform-agnostic.
+
+**Fix location:** `.claude/agents/backend-agent.md` — added "Use Case Constructor Changes — Test Update Obligation" section with a grep-based procedure for finding and updating affected test instantiations.
+
+---
+
+### FB2 — Frontend agent return message vague ("The task is complete")
+
+**Symptom:** Frontend agent's terminal message was "The task is complete" with no file list or verification evidence. Files landed correctly; vagueness was not a blocking problem.
+
+**Root cause:** The HANDOFF_LOG.md is the structured verification record — the conversational terminal message is not load-bearing. "The task is complete" is acceptable because the real evidence is in the HANDOFF_LOG entry.
+
+**Classification:** One-off. No amendment needed. The HANDOFF_LOG receipt requirement already mandates the evidence that matters.
+
+---
+
+### FB3 — Simplify found stringly-typed purpose, duplicate helper, missing cooldown
+
+**Symptom:** Post-dispatch simplify found three real issues in the activation code: a string literal used as an enum value (`purpose="activate"`), duplicate token-generation logic (two call sites instead of a shared helper), and a missing resend cooldown. All three were fixed by main session.
+
+**Root cause:** This is the simplify process working as designed. The agent shipped correct-but-unpolished code; simplify identified the polish gaps. No process gap here.
+
+**Classification:** One-off — by definition, finding issues is the expected output of simplify. No amendment.
+
+---
+
 ## 5. Phase 03 Readiness
 
 All functional deliverables are in place. No blocking process gaps remain for Phase 03 start, with one note:
