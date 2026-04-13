@@ -39,6 +39,8 @@ Exit codes:
 Supports --selftest.
 """
 
+from __future__ import annotations
+
 import re
 import sys
 import tempfile

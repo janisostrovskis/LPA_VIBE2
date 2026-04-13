@@ -16,6 +16,8 @@ runs the pattern check against it, and asserts exit code 1.
 Cleans up via tempfile.TemporaryDirectory.
 """
 
+from __future__ import annotations
+
 import argparse
 import re
 import subprocess

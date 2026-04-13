@@ -126,6 +126,19 @@ CI integration: each tool runs as a separate stage with `--exit-code 1` (or equi
 - Document each variable with a comment.
 - The backend's `env.py` (Pydantic Settings) is the source of truth for required variables.
 
+## Collateral Fixes Must Be Reported, Not Silent
+
+Your scope allows editing `scripts/` files. Sometimes, while executing a brief, you will encounter a real bug in a `scripts/` file that is not listed in the brief (e.g., a Python version compatibility issue). You may fix it — but you MUST report it explicitly.
+
+**Rule:** Any fix to a file NOT listed in the brief's file list is a *collateral fix*. Report it in your handoff receipt under a separate "Collateral Fixes" subsection with:
+- The file path
+- The change made (one sentence)
+- The reason (why was it necessary)
+
+Do NOT silently include collateral fixes in the same commit diff without calling them out. The main session reviews handoff receipts; unreported changes in a commit are invisible and cannot be reviewed.
+
+Why: Pre-Phase-3 batch — H1 devops brief listed only `docker-compose.yml`, `backend/pyproject.toml`, `.env.example`. Devops-agent also modified 5 `scripts/` files to add `from __future__ import annotations` (valid Python 3.8 compat fix, within scope). The fix was correct but unreported; main session discovered it only via `git diff`. One collateral fix is acceptable; undisclosed collateral fixes in every handoff would erode review confidence.
+
 ## Fail-Loudly Rules
 
 - CI pipeline failures block merges. No bypass.

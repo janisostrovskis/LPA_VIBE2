@@ -17,6 +17,8 @@ Supports --selftest: writes a synthetic 2001-line temp file, points the scan
 at it, and asserts exit code 1. Cleans up via tempfile.TemporaryDirectory.
 """
 
+from __future__ import annotations
+
 import argparse
 import subprocess
 import sys

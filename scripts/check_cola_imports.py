@@ -32,6 +32,8 @@ application file, runs the check, and asserts exit code 1 with the domain
 file named.  Cleans up via tempfile.TemporaryDirectory.
 """
 
+from __future__ import annotations
+
 import ast
 import argparse
 import sys

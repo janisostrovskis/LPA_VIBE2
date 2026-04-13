@@ -177,6 +177,18 @@ Pre-flight protocol for parallel dispatch:
 
 The Agent tool handles concurrent subagents natively — no extra configuration is needed.
 
+### Subagent return messages are unreliable — always verify via working tree
+
+Subagent return messages may show only the last tool-use line or a mid-stream note rather than a completion summary. Do NOT use the return message as evidence of success or failure. After every dispatched Agent call returns:
+
+1. Run `git status` to confirm expected files are present or modified.
+2. Run `git diff --stat HEAD` to confirm the diff matches the brief's file list.
+3. If files are missing, treat the handoff as incomplete and dispatch a targeted follow-up or apply the fix manually — do not assume the agent "did it but didn't mention it."
+
+This applies equally to serial and parallel dispatches. The only reliable signal for "handoff complete" is the working-tree state plus a passing pre-commit run.
+
+Why: Pre-Phase-3 batch — H1 and H2 returned mid-stream snippets (e.g., "4 pass, 1 fails…"). H2 silently omitted `test_email_tasks.py`. Main session discovered both gaps only by reading `git status`, not from the return messages.
+
 ### CI watch — background by default
 
 After every `git push`, main session MUST invoke `gh run watch <id> --exit-status` via the Bash tool's `run_in_background: true` parameter, **not** block on it. Main session continues with the next handoff's planning and dispatch while CI runs in parallel. The only *blocking* `gh run watch` is at **sub-phase close**, when all handoffs have landed and the gate check needs every run green before moving to the retrospective.

@@ -75,6 +75,28 @@ After completing any code change but before reporting done, you MUST invoke the 
 4. Invoke `simplify` on changed files (see Mandatory Skill Usage above).
 5. Write `HANDOFF COMPLETE: [task] — PASS/FAIL` when done.
 
+## Brief File List is Exhaustive — Do Not Infer Additional Files
+
+The orchestrator's brief lists every file you must create or edit. That list is exhaustive.
+
+- Do NOT create files not on the list, even if they seem logically required (e.g., a Settings field in `env.py` implied by a feature flag you are wiring up).
+- Do NOT edit files not on the list, even if you believe the change is small and related.
+- If you believe a file is missing from the brief and without it your work cannot function correctly, ask **one focused clarifying question** and stop. Do not proceed with the inferred edit.
+
+The reason this matters: `infrastructure/config/env.py` is Security Agent scope, not backend-agent scope. Writing Settings fields into it from a backend handoff creates dead code, bypasses security review, and confuses ownership.
+
+Why: Pre-Phase-3 batch — H2 saw `EMAIL_QUEUE_BACKEND` in the plan's design decisions table and added `email_queue_backend: Literal["celery","inline"]` to `env.py`, which was H3 (security-agent) scope and not in H2's file list. This produced ~15 lines of dead code + 2 dead tests that were only caught at simplify.
+
+## Explicitly-Named Test Files Are Mandatory Deliverables
+
+When the brief lists a new test file by path (e.g., `backend/tests/infrastructure/tasks/test_email_tasks.py (new)`), that file MUST be created and must contain at minimum a passing test. It is not optional.
+
+- If you encounter a technical blocker (missing fixture, environment constraint, import error), write the test in a reduced form (pure unit, no DB) and explain the constraint in a `pytest.mark.skip` reason.
+- If even a reduced form is impossible, report `HANDOFF FAIL: <path> not created — <specific reason>` in your receipt and stop. Do not silently omit the file and report PASS.
+- Fallback language in a brief (e.g., "if it still fails, drop the DB assertion") authorizes a *simplified* test, not *no* test.
+
+Why: Pre-Phase-3 batch — H2 brief listed `test_email_tasks.py` as a new deliverable with a fallback ("drop the DB assertion") for CI-environment constraints. H2 created only `__init__.py` and skipped the test file entirely. No test exercised the Celery task path. Security review flagged this as INFO-1; main session had to follow up.
+
 ## Use Case Constructor Changes — Test Update Obligation
 
 When you add a new port (dependency) to an existing use case's `__init__` signature, you MUST also update every test that instantiates that use case directly with positional or keyword arguments. Failure to do so produces `TypeError` failures at test collection time that are not caught by the use case's own unit tests (they only test the new path).
