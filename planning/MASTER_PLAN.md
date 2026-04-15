@@ -409,8 +409,9 @@ LPA_VIBE2/
 3. CSV export — all major entities (members, enrollments, payments, certifications)
 4. Periodic reports — monthly/quarterly summaries exportable for board meetings
 5. Analytics integration — privacy-respecting, GDPR-compliant (e.g., Plausible or similar)
+6. **VAT threshold tracker** — year-to-date gross sales widget on the admin dashboard. Tracks cumulative revenue across memberships + trainings + any other paid items per calendar year. Shows a large progress bar against the **EUR 50,000** Latvian VAT-registration threshold. State machine: Green (< EUR 35k, 70%) → Yellow (EUR 35k–45k, 70%–90%) → Orange (EUR 45k–50k, 90%–100%) → Red (≥ EUR 50k, threshold crossed — mandatory VAT registration triggered by law). Yellow and above trigger an admin notification email weekly; Red triggers immediate daily reminders until acknowledged. Widget links to a help page explaining the VAT registration process and the consequences of crossing. Historical years archived and viewable in a sub-tab. Driven by a single SQL aggregation over `Invoice.total_cents` filtered by `issued_at BETWEEN {year_start} AND {year_end}` and `status IN (paid)` — no new schema, lives entirely in the application layer as a read-only use case.
 
-**Testing gate:** Dashboard shows accurate counts matching database. Audit logs capture all sensitive operations from phases 2-7. CSV exports produce valid files. Reports cover all success metrics from business case section 6. Role-based access enforced — only admins see the console.
+**Testing gate:** Dashboard shows accurate counts matching database. Audit logs capture all sensitive operations from phases 2-7. CSV exports produce valid files. Reports cover all success metrics from business case section 6. Role-based access enforced — only admins see the console. VAT tracker widget shows correct YTD total matching a manual SQL sum over invoices; state transitions fire at the documented thresholds; notification emails deliver at the right tier.
 
 **Acceptance criteria ref:** Business case sections 3.12, 3.13
 
