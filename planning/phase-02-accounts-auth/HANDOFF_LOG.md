@@ -286,6 +286,21 @@ Source-touching handoffs dated 2026-04-10 or later must:
 
 ---
 
+## 02g-hotfix-1 — backend-agent — 2026-04-15
+
+- **Task:** Remove hardcoded DB URL fallback from Celery worker session factory; read from Pydantic Settings instead (fail-loudly on missing DATABASE_URL)
+- **Scope (files changed):**
+  - backend/app/infrastructure/tasks/session.py
+- **Skills invoked:**
+  - `simplify` — waived — 2-line fix (remove constant + replace os.environ.get with get_settings()), too small for full simplify cycle
+- **Rule 3 verification:**
+  - `(cd backend && DATABASE_URL="postgresql://test:test@localhost:5432/test" python -c "from app.infrastructure.tasks.session import build_worker_sessionmaker")` → exit 0
+  - `pre-commit run --files backend/app/infrastructure/tasks/session.py` → exit 0 (Security Scan: Passed, COLA Import Check: Passed, File Size Check: Passed)
+- **Result:** HANDOFF COMPLETE — PASS
+- **Notes:** `_DEFAULT_DB_URL = "postgresql://lpa:lpa@db:5432/lpa"` was flagged by the detect-secrets security scanner as a hardcoded credential. Removed the constant entirely; replaced `os.environ.get("DATABASE_URL", _DEFAULT_DB_URL)` with `get_settings().database_url`, which uses the same validated Pydantic Settings singleton as the FastAPI process. A missing DATABASE_URL now raises `ValidationError` at Celery worker startup (fail-loudly). `import os` removed as it became unused.
+
+---
+
 ## 02g-H3 — devops-agent — 2026-04-10
 
 - **Task:** Add PyJWT and bcrypt to backend/pyproject.toml runtime dependencies (both were imported by backend code but missing from the declared dep list)
