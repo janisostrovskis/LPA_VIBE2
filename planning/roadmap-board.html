@@ -1,0 +1,227 @@
+<title>LPA Roadmap Board</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: summary strip (progress + next up) above a three-column board; columns stack on phones. Palette follows the LPA design language: neutral-heavy, sage + mint accents. */
+:root {
+  --bg: #F7F8F6;
+  --surface: #FFFFFF;
+  --line: #E2E5DF;
+  --fg: #2B302A;
+  --muted: #646B61;
+  --sage: #6E8560;
+  --sage-soft: #9CAF88;
+  --mint: #E8F4F0;
+  --beige: #E8DCC4;
+  --taupe: #C9B8A8;
+  --you: #8A6E4B;
+  --you-soft: #F3ECDF;
+  --done: #4F7A55;
+  --font: "Montserrat", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #171A16; --surface: #20241F; --line: #333A31; --fg: #E8EBE5; --muted: #A2AA9E;
+    --sage: #A9BD95; --sage-soft: #7F9470; --mint: #22302B; --beige: #3A3326; --taupe: #6A5E52;
+    --you: #D9B98C; --you-soft: #352D21; --done: #8CC092; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #171A16; --surface: #20241F; --line: #333A31; --fg: #E8EBE5; --muted: #A2AA9E;
+  --sage: #A9BD95; --sage-soft: #7F9470; --mint: #22302B; --beige: #3A3326; --taupe: #6A5E52;
+  --you: #D9B98C; --you-soft: #352D21; --done: #8CC092; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 16px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1280px; margin: 0 auto; padding-block: 32px 48px; display: grid; gap: 24px; }
+header { display: grid; gap: 6px; }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--sage); }
+h1 { font-size: clamp(26px, 4vw, 34px); font-weight: 600; margin: 0; text-wrap: balance; }
+.sub { color: var(--muted); margin: 0; max-width: 68ch; }
+
+.summary { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 16px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; min-width: 0; }
+.panel h2 { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+.count { font-size: 30px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.count small { font-size: 15px; color: var(--muted); font-weight: 500; }
+.bar { height: 8px; background: var(--mint); border-radius: 9999px; overflow: hidden; margin-top: 10px; }
+.bar > i { display: block; height: 100%; background: var(--sage-soft); border-radius: 9999px; transition: width 1.2s ease; }
+.next { display: grid; gap: 6px; }
+.next .t { font-size: 18px; font-weight: 600; }
+.next .d { color: var(--muted); margin: 0; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 13px; color: var(--muted); align-items: center; }
+.status-line { font-size: 13px; color: var(--muted); }
+
+.board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.col { background: color-mix(in srgb, var(--line) 35%, transparent); border-radius: 12px; padding: 12px; display: grid; gap: 10px; min-width: 0; }
+.col-head { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 6px; }
+.col-head h3 { margin: 0; font-size: 15px; font-weight: 600; }
+.col-head span { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.empty { color: var(--muted); font-size: 14px; padding: 12px 6px; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 8px; min-width: 0; }
+.card.is-next { border-color: var(--sage-soft); box-shadow: 0 0 0 2px var(--mint); }
+.card.is-done { opacity: .78; }
+.card-top { display: flex; gap: 10px; align-items: baseline; }
+.n { font-size: 13px; font-weight: 700; color: var(--sage); font-variant-numeric: tabular-nums; min-width: 2ch; }
+.card.is-done .n { color: var(--done); }
+.card h4 { margin: 0; font-size: 15px; font-weight: 600; line-height: 1.35; }
+.card.is-done h4 { text-decoration: line-through; text-decoration-color: var(--taupe); }
+.card p { margin: 0; font-size: 14px; color: var(--muted); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip { font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 9999px; background: var(--mint); color: var(--sage); white-space: nowrap; }
+.chip.you { background: var(--you-soft); color: var(--you); }
+.chip.group { background: transparent; border: 1px solid var(--line); color: var(--muted); font-weight: 500; }
+.needs { font-size: 12px; color: var(--muted); }
+.needs.waiting { color: var(--you); font-weight: 600; }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; }
+button {
+  font: inherit; font-size: 13px; font-weight: 600; border-radius: 9999px; padding: 6px 14px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface); color: var(--fg); transition: background .4s ease, border-color .4s ease;
+}
+button:hover { border-color: var(--sage-soft); background: var(--mint); }
+button.primary { background: var(--sage); border-color: var(--sage); color: var(--surface); }
+button.primary:hover { background: var(--sage-soft); border-color: var(--sage-soft); }
+button:focus-visible { outline: 2px solid var(--sage); outline-offset: 2px; }
+button:disabled { opacity: .5; cursor: default; }
+
+@media (max-width: 1023px) { .board { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 767px) { .summary { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Latvijas Pilates Asociācija · platform</div>
+    <h1>LPA Roadmap Board</h1>
+    <p class="sub">The agreed path from the October 2026 repo review: get CI honest, unblock Phase 3, ship memberships in two steps. Work top to bottom; the number is the order.</p>
+  </header>
+
+  <section class="summary" aria-label="Progress">
+    <div class="panel">
+      <h2>Progress</h2>
+      <div class="count" id="count">0 <small>of 0 done</small></div>
+      <div class="bar" role="progressbar" id="bar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i style="width:0%"></i></div>
+    </div>
+    <div class="panel next" id="next">
+      <h2>Next up</h2>
+      <div class="t">Loading the board…</div>
+    </div>
+  </section>
+
+  <div class="legend">
+    <span class="chip">Claude</span> builds it
+    <span class="chip you">You</span> account setup or a decision only you can make
+    <span class="status-line" id="status" role="status"></span>
+  </div>
+
+  <main class="board" id="board">
+    <section class="col" data-status="todo"><div class="col-head"><h3>To do</h3><span>0</span></div></section>
+    <section class="col" data-status="doing"><div class="col-head"><h3>In progress</h3><span>0</span></div></section>
+    <section class="col" data-status="done"><div class="col-head"><h3>Done</h3><span>0</span></div></section>
+  </main>
+</div>
+
+<script>
+(function () {
+  const COLS = ["todo", "doing", "done"];
+  const LABEL = { todo: "To do", doing: "In progress", done: "Done" };
+  let tasks = [];
+  let db = null;
+  let canWrite = true;
+  const busy = new Set();
+
+  const $ = (s, r) => (r || document).querySelector(s);
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const setStatus = (t) => { $("#status").textContent = t; };
+
+  function render() {
+    const byN = new Map(tasks.map(t => [t.n, t]));
+    const done = tasks.filter(t => t.status === "done").length;
+    const pct = tasks.length ? Math.round(done / tasks.length * 100) : 0;
+    $("#count").innerHTML = "";
+    $("#count").append(String(done), " ", el("small", null, "of " + tasks.length + " done"));
+    $("#bar").setAttribute("aria-valuenow", String(pct));
+    $("#bar > i").style.width = pct + "%";
+
+    const open = tasks.filter(t => t.status !== "done").sort((a, b) => a.n - b.n);
+    const next = open.find(t => t.status === "doing") || open[0];
+    const nx = $("#next"); nx.innerHTML = ""; nx.append(el("h2", null, "Next up"));
+    if (!tasks.length) {
+      nx.append(el("div", "t", "No steps yet"), el("p", "d", "The steps appear here once Claude adds them to the board."));
+    } else if (!next) {
+      nx.append(el("div", "t", "Everything on the board is done"), el("p", "d", "Ask Claude to plan the next stretch."));
+    } else {
+      nx.append(el("div", "t", next.n + ". " + next.title), el("p", "d", next.detail || ""));
+    }
+
+    for (const status of COLS) {
+      const col = $('.col[data-status="' + status + '"]');
+      const list = tasks.filter(t => t.status === status).sort((a, b) => a.n - b.n);
+      col.querySelectorAll(".card, .empty").forEach(n => n.remove());
+      $(".col-head span", col).textContent = String(list.length);
+      if (!list.length) col.append(el("div", "empty", status === "doing" ? "Nothing in progress." : status === "done" ? "Nothing finished yet." : "Nothing left to start."));
+      for (const t of list) col.append(card(t, byN, next));
+    }
+  }
+
+  function card(t, byN, next) {
+    const c = el("article", "card" + (next && t.id === next.id ? " is-next" : "") + (t.status === "done" ? " is-done" : ""));
+    const top = el("div", "card-top");
+    top.append(el("span", "n", String(t.n).padStart(2, "0")), el("h4", null, t.title));
+    c.append(top);
+    if (t.detail) c.append(el("p", null, t.detail));
+    const meta = el("div", "meta");
+    meta.append(el("span", "chip" + (t.owner === "You" ? " you" : ""), t.owner || "Claude"));
+    if (t.group) meta.append(el("span", "chip group", t.group));
+    c.append(meta);
+    const needs = Array.isArray(t.needs) ? t.needs : [];
+    if (needs.length && t.status !== "done") {
+      const waiting = needs.filter(n => byN.get(n) && byN.get(n).status !== "done");
+      c.append(el("div", "needs" + (waiting.length ? " waiting" : ""), waiting.length ? "Waiting on step " + waiting.join(", ") : "Unblocked (needed " + needs.join(", ") + ")"));
+    }
+    if (canWrite && db) {
+      const a = el("div", "actions");
+      const i = COLS.indexOf(t.status);
+      if (i > 0) a.append(btn("Move back", "", () => move(t, COLS[i - 1])));
+      if (i < 2) a.append(btn(i === 0 ? "Start" : "Mark done", "primary", () => move(t, COLS[i + 1])));
+      a.querySelectorAll("button").forEach(b => { b.disabled = busy.has(t.id); b.setAttribute("aria-label", b.textContent + ": step " + t.n); });
+      c.append(a);
+    }
+    return c;
+  }
+
+  function btn(label, cls, fn) { const b = el("button", cls, label); b.type = "button"; b.addEventListener("click", fn); return b; }
+
+  async function move(t, status) {
+    if (busy.has(t.id)) return;
+    busy.add(t.id); render();
+    try {
+      await db.collection("tasks").doc(t.id).update({ status, updatedAt: new Date().toISOString() });
+      setStatus("Step " + t.n + " moved to " + LABEL[status] + ".");
+    } catch (e) {
+      if (e && e.code === "invalid_argument") { canWrite = false; setStatus("You can view this board but not change it."); }
+      else setStatus("Could not move step " + t.n + " (" + ((e && e.code) || "error") + "). Try again.");
+    } finally { busy.delete(t.id); render(); }
+  }
+
+  render();
+
+  (async () => {
+    if (!window.claude || !window.claude.use) { setStatus("Open this board on claude.ai to see and update the steps."); return; }
+    const [store, user] = await Promise.all([claude.use("db"), claude.use("user")]);
+    if (!store) { setStatus("The board's data isn't available in this view. Sign in on claude.ai to see the steps."); return; }
+    db = store;
+    if (user) { const w = await user.can("data.write"); if (w === false) canWrite = false; }
+    db.collection("tasks").orderBy("n").onSnapshot(snap => {
+      tasks = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+      render();
+    }, e => setStatus("Live updates stopped (" + e.code + "). Reload the page to reconnect."));
+  })();
+})();
+</script>
